@@ -150,6 +150,18 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="form-section">
+            <h3>Consommation électrique générale</h3>
+            <label for="electricityUse">Utilisation électrique :</label>
+            <input type="text" id="electricityUse" name="electricityUse" placeholder="Entrez l'utilisation électrique">
+        </div>
+
+        <div class="form-section">
+            <h3>Commentaires</h3>
+            <label for="comments">Commentaires :</label>
+            <textarea id="comments" name="comments" placeholder="Entrez vos commentaires"></textarea>
+        </div>
     </form>
 
     <button onclick="saveMapAsPDF()">Exporter en PDF</button>
@@ -157,9 +169,9 @@
     <script>
         // Initialiser la carte
         const map = L.map('map', {
-            zoomControl: true, // Activer les boutons de zoom
-            scrollWheelZoom: true // Activer le zoom avec la molette de la souris
-        }).setView([48.8566, 2.3522], 18); // Coordonnées par défaut (Paris)
+            zoomControl: true,
+            scrollWheelZoom: true
+        }).setView([48.8566, 2.3522], 18);
 
         const tileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
             maxZoom: 20,
@@ -171,6 +183,7 @@
         // Ajouter le canvas pour dessiner
         const drawingCanvas = document.getElementById('drawingCanvas');
         const ctx = drawingCanvas.getContext('2d');
+        const savedAddressField = document.getElementById('Adresse');
 
         let drawing = false;
         let drawingEnabled = false;
@@ -183,7 +196,7 @@
             toggleDrawingButton.textContent = drawingEnabled ? 'Désactiver le dessin' : 'Activer le dessin';
         });
 
-        // Adapter la taille du canvas à celle du conteneur de la carte
+        // Adapter la taille du canvas
         function resizeCanvas() {
             drawingCanvas.width = drawingCanvas.offsetWidth;
             drawingCanvas.height = drawingCanvas.offsetHeight;
@@ -235,6 +248,7 @@
                 if (data.length > 0) {
                     const { lat, lon } = data[0];
                     map.setView([lat, lon], 18);
+                    savedAddressField.value = address;
                 } else {
                     alert('Adresse introuvable.');
                 }
