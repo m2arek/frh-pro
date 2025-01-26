@@ -67,7 +67,7 @@
     </style>
 </head>
 <body>
-    <h1> Formulaire de saisie</h1>
+    <h1> 1 Formulaire de saisie</h1>
     <form id="addressForm" onsubmit="return searchAddress(event);">
         <label for="address">Adresse :</label>
         <input type="text" id="address" name="address" placeholder="Entrez une adresse" required>
@@ -328,6 +328,7 @@
     const mapContainer = document.getElementById('map-container');
     const userForm = document.getElementById('userForm');
 
+    // Capture de la carte avec html2canvas
     html2canvas(mapContainer, {
         useCORS: true,
         scale: 2
@@ -337,7 +338,7 @@
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF();
 
-        // Ajouter l'image de la carte sur la première page
+        // **Ajouter la carte sur la première page**
         pdf.addImage(mapImage, 'PNG', 10, 10, 190, 100);
 
         // Ajouter les données du formulaire sur la première page
@@ -350,9 +351,9 @@
             }
         });
 
-        // Ajouter une nouvelle page pour le tableau
-        pdf.addPage(); // Nouvelle page
-        yOffset = 10; // Réinitialiser la position pour la nouvelle page
+        // **Passer à une nouvelle page pour le tableau**
+        pdf.addPage(); // Nouvelle page pour le tableau
+        yOffset = 10; // Réinitialiser la position verticale
 
         // Ajouter le tableau de la consommation
         const consumptionTable = document.getElementById("consumptionTable");
@@ -366,15 +367,15 @@
                 rowText += cell.innerText + " | "; // Concaténer les cellules
             });
 
-            // Ajouter la ligne de texte au PDF
+            // Ajouter la ligne au PDF
             pdf.text(rowText.trim(), 10, yOffset);
 
             yOffset += 10; // Espacement entre les lignes
 
-            // Gérer les débordements si le tableau dépasse la hauteur de la page
+            // Gérer les débordements de la page
             if (yOffset > 280) { // Si on dépasse la hauteur de la page
                 pdf.addPage(); // Ajouter une nouvelle page
-                yOffset = 10; // Réinitialiser à la position du haut de la nouvelle page
+                yOffset = 10; // Réinitialiser en haut de la nouvelle page
             }
         });
 
