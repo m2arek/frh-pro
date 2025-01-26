@@ -5,24 +5,151 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Carte avec Dessin et Formulaire</title>
   <!-- Liens CSS pour Leaflet -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
   <!-- Scripts JS pour Leaflet et html2canvas -->
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+
   <style>
+    /* ------------------------------
+       Styles généraux
+    -------------------------------- */
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f2f2f2;
+      color: #333;
     }
+    h1, h2, h3, h4, h5 {
+      margin-top: 0;
+      color: #444;
+    }
+    a, button {
+      cursor: pointer;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+
+    /* ------------------------------
+       Container global
+    -------------------------------- */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fff; /* Fond blanc */
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+    }
+
+    /* ------------------------------
+       Titre principal
+    -------------------------------- */
+    .page-title {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    /* ------------------------------
+       Formulaires
+    -------------------------------- */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: 500;
+      margin-top: 5px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="time"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+      margin-top: 5px;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="time"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #999;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-section {
+      background-color: #fafafa; /* Fond clair */
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .form-section h3 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #555;
+    }
+
+    /* ------------------------------
+       Boutons
+    -------------------------------- */
+    button {
+      display: inline-block;
+      padding: 10px 15px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      background-color: #3498db;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    /* Bouton "Activer le dessin" */
+    #toggleDrawingButton {
+      float: right; 
+    }
+
+    /* ------------------------------
+       Section carte
+    -------------------------------- */
     #map-container {
       position: relative;
       width: 100%;
       height: 500px;
       margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      overflow: hidden;
     }
     #map {
       width: 100%;
@@ -37,355 +164,366 @@
       z-index: 1000;
       pointer-events: none; /* Par défaut, n'intercepte pas les événements */
     }
-    form {
+
+    /* ------------------------------
+       Grilles de checkboxes
+    -------------------------------- */
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 5px 10px;
+      margin-top: 5px;
+    }
+
+    .checkbox-grid label {
       display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    input,
-    button,
-    textarea {
-      padding: 10px;
-      font-size: 16px;
-    }
-    .form-section {
+      align-items: center;
+      font-weight: normal;
+      background: #fff;
+      padding: 5px 8px;
+      border-radius: 4px;
       border: 1px solid #ccc;
-      padding: 15px;
-      border-radius: 5px;
-    }
-    .form-section h3 {
-      margin-top: 0;
-    }
-    #toggleDrawingButton {
-      margin-bottom: 20px;
-      padding: 10px 15px;
-      font-size: 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
       cursor: pointer;
     }
-    #toggleDrawingButton:hover {
-      background-color: #0056b3;
+
+    .checkbox-grid input[type="checkbox"] {
+      margin-right: 6px;
+    }
+
+    /* ------------------------------
+       Tableau de consommation
+    -------------------------------- */
+    #consumptionTable {
+      border: 1px solid #ddd;
+    }
+    #consumptionTable th, #consumptionTable td {
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+    }
+    #consumptionTable thead {
+      background-color: #f0f0f0;
+    }
+    #consumptionTable tfoot {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    /* ------------------------------
+       Responsivité basique
+    -------------------------------- */
+    @media (max-width: 768px) {
+      #toggleDrawingButton {
+        float: none;
+        margin-top: 10px;
+      }
+      .checkbox-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      }
     }
   </style>
 </head>
 
 <body>
-  <h1>90 sur la carte et sauvegardez en PDF</h1>
+  <div class="container">
+    <h1 class="page-title">20 sur la carte et sauvegardez en PDF</h1>
 
-  <!-- Formulaire de recherche d'adresse -->
-  <form id="addressForm" onsubmit="return searchAddress(event);">
-    <label for="address">Adresse :</label>
-    <input
-      type="text"
-      id="address"
-      name="address"
-      placeholder="Entrez une adresse"
-      required
-    />
-    <button type="submit">Rechercher</button>
-  </form>
+    <!-- Formulaire de recherche d'adresse -->
+    <form id="addressForm" onsubmit="return searchAddress(event);">
+      <label for="address">Adresse :</label>
+      <input
+        type="text"
+        id="address"
+        name="address"
+        placeholder="Entrez une adresse"
+        required
+      />
+      <button type="submit">Rechercher</button>
+    </form>
 
-  <!-- Bouton activation dessin -->
-  <button id="toggleDrawingButton">Activer le dessin</button>
+    <!-- Bouton activation dessin -->
+    <button id="toggleDrawingButton">Activer le dessin</button>
 
-  <!-- Zone carte + canvas -->
-  <div id="map-container">
-    <div id="map"></div>
-    <canvas id="drawingCanvas"></canvas>
+    <!-- Zone carte + canvas -->
+    <div id="map-container">
+      <div id="map"></div>
+      <canvas id="drawingCanvas"></canvas>
+    </div>
+
+    <!-- Formulaire principal -->
+    <form id="userForm">
+      <!-- 1) Informations société -->
+      <div class="form-section">
+        <h3>Informations sur la société</h3>
+        <label for="Adresse">Adresse entrée :</label>
+        <input type="text" id="Adresse" name="Adresse" readonly />
+
+        <label for="companyName">Société :</label>
+        <input
+          type="text"
+          id="companyName"
+          name="companyName"
+          placeholder="Entrez le nom de la société"
+        />
+
+        <label for="activity">Activité :</label>
+        <input
+          type="text"
+          id="activity"
+          name="activity"
+          placeholder="Entrez l'activité"
+        />
+
+        <label for="Nom">Nom :</label>
+        <input
+          type="text"
+          id="Nom"
+          name="Nom"
+          placeholder="Entrez le nom"
+        />
+
+        <label for="Prénom">Prénom :</label>
+        <input
+          type="text"
+          id="Prénom"
+          name="Prénom"
+          placeholder="Entrez le prénom"
+        />
+
+        <label for="Statut">Statut :</label>
+        <input
+          type="text"
+          id="activity"
+          name="Statut"
+          placeholder="Statut dans ste"
+        />
+      </div>
+
+      <!-- 2) Informations toiture -->
+      <div class="form-section">
+        <h3>Informations sur la toiture</h3>
+        <label for="Surface toiture">Surface toiture (m²) :</label>
+        <input
+          type="number"
+          id="Surface toiture"
+          name="Surface toiture"
+          placeholder="Entrez la surface de la toiture"
+        />
+
+        <label for="Type de toiture">Type de toiture :</label>
+        <select id="Type de toiture" name="Type de toiture">
+          <option value="" disabled selected>Choisissez un Type de toiture</option>
+          <option value="2 pentes">2 pentes</option>
+          <option value="1 pente">1 pente</option>
+          <option value="Toit plat">Toit plat</option>
+        </select>
+
+        <label for="Pente toiture">Pente toiture (°) :</label>
+        <input
+          type="number"
+          id="Pente toiture"
+          name="Pente toiture"
+          placeholder="Pente de la toiture"
+        />
+
+        <label for="Type de couverture">Type de couverture :</label>
+        <select id="Type de couverture" name="Type de couverture">
+          <option value="" disabled selected>Choisissez un type de couverture</option>
+          <option value="Bacs acier">Bacs acier</option>
+          <option value="Fibro ciment">Fibro ciment</option>
+          <option value="Tuiles">Tuiles</option>
+          <option value="Béton">Béton</option>
+        </select>
+
+        <label for="Type de charpente">Type de charpente :</label>
+        <select id="Type de charpente" name="Type de charpente">
+          <option value="" disabled selected>Choisissez un type de charpente</option>
+          <option value="Metallique">Métallique</option>
+          <option value="Bois">Bois</option>
+        </select>
+
+        <label for="Translucides">Présence de translucides :</label>
+        <select id="Translucides" name="Translucides">
+          <option value="" disabled selected>Presence de translucides o/n</option>
+          <option value="Oui">Oui</option>
+          <option value="Non">Non</option>
+        </select>
+
+        <label for="Couvrir Translucides">Couvrir Translucides :</label>
+        <select id="Couvrir Translucides" name="Couvrir Translucides">
+          <option value="" disabled selected>Couvrir Translucides o/n</option>
+          <option value="Oui">Oui</option>
+          <option value="Non">Non</option>
+        </select>
+      </div>
+
+      <!-- 3) Periodes d'utilisation -->
+      <div class="form-section">
+        <h3>Periodes d'utilisation</h3>
+
+        
+
+        <!-- Mois de congés (cases à cocher) -->
+        <h4>Mois de congés</h4>
+        <div class="checkbox-grid">
+          <label><input type="checkbox" name="moisConges[]" value="Janvier" />Janvier</label>
+          <label><input type="checkbox" name="moisConges[]" value="Février" />Février</label>
+          <label><input type="checkbox" name="moisConges[]" value="Mars" />Mars</label>
+          <label><input type="checkbox" name="moisConges[]" value="Avril" />Avril</label>
+          <label><input type="checkbox" name="moisConges[]" value="Mai" />Mai</label>
+          <label><input type="checkbox" name="moisConges[]" value="Juin" />Juin</label>
+          <label><input type="checkbox" name="moisConges[]" value="Juillet" />Juillet</label>
+          <label><input type="checkbox" name="moisConges[]" value="Août" />Août</label>
+          <label><input type="checkbox" name="moisConges[]" value="Septembre" />Septembre</label>
+          <label><input type="checkbox" name="moisConges[]" value="Octobre" />Octobre</label>
+          <label><input type="checkbox" name="moisConges[]" value="Novembre" />Novembre</label>
+          <label><input type="checkbox" name="moisConges[]" value="Décembre" />Décembre</label>
+        </div>
+
+        <!-- Jours de congés (cases à cocher) -->
+        <h4>Jours de congés</h4>
+        <div class="checkbox-grid">
+          <label><input type="checkbox" name="joursConges[]" value="Lundi" />Lundi</label>
+          <label><input type="checkbox" name="joursConges[]" value="Mardi" />Mardi</label>
+          <label><input type="checkbox" name="joursConges[]" value="Mercredi" />Mercredi</label>
+          <label><input type="checkbox" name="joursConges[]" value="Jeudi" />Jeudi</label>
+          <label><input type="checkbox" name="joursConges[]" value="Vendredi" />Vendredi</label>
+          <label><input type="checkbox" name="joursConges[]" value="Samedi" />Samedi</label>
+          <label><input type="checkbox" name="joursConges[]" value="Dimanche" />Dimanche</label>
+        </div>
+
+        <!-- Heure de début et fin de travail -->
+        <label for="heureDebut">Heure début travail :</label>
+        <input type="time" id="heureDebut" name="heureDebut" />
+
+        <label for="heureFin">Heure fin :</label>
+        <input type="time" id="heureFin" name="heureFin" />
+      </div>
+
+      <!-- 4) Tableau de consommation mensuelle -->
+      <div id="consumptionTableContainer" class="form-section">
+        <h3>Consommation mensuelle</h3>
+        <table
+          id="consumptionTable"
+          border="1"
+          style="border-collapse: collapse; width: 100%; text-align: center;"
+        >
+          <thead>
+            <tr>
+              <th style="width: 20%;">Mois</th>
+              <th style="width: 25%;">Consommation (€)</th>
+              <th style="width: 25%;">Consommation (kWh)</th>
+              <th style="width: 30%;">Coût par kWh (€)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Générer les lignes pour chaque mois -->
+            <script>
+              const months = [
+                "Janvier","Février","Mars","Avril","Mai","Juin",
+                "Juillet","Août","Septembre","Octobre","Novembre","Décembre",
+              ];
+
+              months.forEach((month, index) => {
+                document.write(`
+                  <tr>
+                    <td>${month}</td>
+                    <td>
+                        <input
+                            type="number"
+                            id="euros_${index}"
+                            name="euros_${index}"
+                            class="euroInput"
+                            oninput="calculateCost(${index})"
+                            placeholder="€"
+                            style="width: 90%;">
+                    </td>
+                    <td>
+                        <input
+                            type="number"
+                            id="kwh_${index}"
+                            name="kwh_${index}"
+                            class="kwhInput"
+                            oninput="calculateCost(${index})"
+                            placeholder="kWh"
+                            style="width: 90%;">
+                    </td>
+                    <td id="costPerKwh_${index}">-</td>
+                  </tr>
+                `);
+              });
+            </script>
+            <!-- Ligne pour les totaux -->
+            <tr>
+              <td><strong>Total annuel</strong></td>
+              <td id="totalEuros">-</td>
+              <td id="totalKwh">-</td>
+              <td id="totalCostPerKwh">-</td>
+            </tr>
+          </tbody>
+        </table>
+        <script>
+          // Fonction pour calculer le coût par kWh pour un mois donné
+          function calculateCost(index) {
+            const eurosInput = document.getElementById(`euros_${index}`);
+            const kwhInput = document.getElementById(`kwh_${index}`);
+            const costPerKwhCell = document.getElementById(`costPerKwh_${index}`);
+
+            const euros = parseFloat(eurosInput.value) || 0;
+            const kwh = parseFloat(kwhInput.value) || 0;
+
+            if (kwh > 0) {
+              const costPerKwh = (euros / kwh).toFixed(2);
+              costPerKwhCell.textContent = `${costPerKwh} €`;
+            } else {
+              costPerKwhCell.textContent = "-";
+            }
+
+            calculateTotals();
+          }
+
+          // Fonction pour calculer les totaux annuels
+          function calculateTotals() {
+            let totalEuros = 0;
+            let totalKwh = 0;
+
+            for (let i = 0; i < 12; i++) {
+              const euros = parseFloat(document.getElementById(`euros_${i}`).value) || 0;
+              const kwh = parseFloat(document.getElementById(`kwh_${i}`).value) || 0;
+              totalEuros += euros;
+              totalKwh += kwh;
+            }
+
+            const averageCostPerKwh = totalKwh > 0 ? (totalEuros / totalKwh).toFixed(2) : "-";
+
+            document.getElementById("totalEuros").textContent = `${totalEuros.toFixed(2)} €`;
+            document.getElementById("totalKwh").textContent = `${totalKwh.toFixed(2)} kWh`;
+            document.getElementById("totalCostPerKwh").textContent =
+              totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
+          }
+        </script>
+      </div>
+
+      <!-- 5) Commentaires -->
+      <div class="form-section">
+        <h3>Commentaires</h3>
+        <label for="comments">Commentaires :</label>
+        <textarea
+          id="comments"
+          name="comments"
+          placeholder="Entrez vos commentaires"
+        ></textarea>
+      </div>
+    </form>
+
+    <!-- Boutons PDF + gestion JSON -->
+    <div style="margin-bottom:15px;">
+      <button onclick="saveMapAsPDF()">Exporter en PDF</button>
+      <button id="saveToFile">Télécharger les données</button>
+      <input type="file" id="loadFromFile" style="display: none;" />
+      <button id="uploadFile">Charger un fichier</button>
+    </div>
   </div>
-
-  <!-- Formulaire principal -->
-  <form id="userForm">
-    <!-- 1) Informations société -->
-    <div class="form-section">
-      <h3>Informations sur la société</h3>
-      <label for="Adresse">Adresse entrée :</label>
-      <input type="text" id="Adresse" name="Adresse" readonly />
-
-      <label for="companyName">Société :</label>
-      <input
-        type="text"
-        id="companyName"
-        name="companyName"
-        placeholder="Entrez le nom de la société"
-      />
-
-      <label for="activity">Activité :</label>
-      <input
-        type="text"
-        id="activity"
-        name="activity"
-        placeholder="Entrez l'activité"
-      />
-
-      <label for="Nom">Nom :</label>
-      <input
-        type="text"
-        id="Nom"
-        name="Nom"
-        placeholder="Entrez le nom"
-      />
-
-      <label for="Prénom">Prénom :</label>
-      <input
-        type="text"
-        id="Prénom"
-        name="Prénom"
-        placeholder="Entrez le prénom"
-      />
-
-      <label for="Statut">Statut :</label>
-      <input
-        type="text"
-        id="activity"
-        name="Statut"
-        placeholder="Statut dans ste"
-      />
-    </div>
-
-    <!-- 2) Informations toiture -->
-    <div class="form-section">
-      <h3>Informations sur la toiture</h3>
-      <label for="Surface toiture">Surface toiture (m²) :</label>
-      <input
-        type="number"
-        id="Surface toiture"
-        name="Surface toiture"
-        placeholder="Entrez la surface de la toiture"
-      />
-
-      <label for="Type de toiture">Type de toiture :</label>
-      <select id="Type de toiture" name="Type de toiture">
-        <option value="" disabled selected>Choisissez un Type de toiture</option>
-        <option value="2 pentes">2 pentes</option>
-        <option value="1 pente">1 pente</option>
-        <option value="Toit plat">Toit plat</option>
-      </select>
-
-      <label for="Pente toiture">Pente toiture (°) :</label>
-      <input
-        type="number"
-        id="Pente toiture"
-        name="Pente toiture"
-        placeholder="Pente de la toiture"
-      />
-
-      <label for="Type de couverture">Type de couverture :</label>
-      <select id="Type de couverture" name="Type de couverture">
-        <option value="" disabled selected>Choisissez un type de couverture</option>
-        <option value="Bacs acier">Bacs acier</option>
-        <option value="Fibro ciment">Fibro ciment</option>
-        <option value="Tuiles">Tuiles</option>
-        <option value="Béton">Béton</option>
-      </select>
-
-      <label for="Type de charpente">Type de charpente :</label>
-      <select id="Type de charpente" name="Type de charpente">
-        <option value="" disabled selected>Choisissez un type de charpente</option>
-        <option value="Metallique">Métallique</option>
-        <option value="Bois">Bois</option>
-      </select>
-
-      <label for="Translucides">Présence de translucides :</label>
-      <select id="Translucides" name="Translucides">
-        <option value="" disabled selected>Presence de translucides o/n</option>
-        <option value="Oui">Oui</option>
-        <option value="Non">Non</option>
-      </select>
-
-      <label for="Couvrir Translucides">Couvrir Translucides :</label>
-      <select id="Couvrir Translucides" name="Couvrir Translucides">
-        <option value="" disabled selected>Couvrir Translucides o/n</option>
-        <option value="Oui">Oui</option>
-        <option value="Non">Non</option>
-      </select>
-    </div>
-
-    <!-- 3) Consommation électrique générale -->
-    <div class="form-section">
-      <h3>Consommation électrique générale</h3>
-
-      <label for="electricityUse">Utilisation électrique :</label>
-      <input
-        type="text"
-        id="electricityUse"
-        name="electricityUse"
-        placeholder="Entrez l'utilisation électrique"
-      />
-
-      <!-- Mois de congés (cases à cocher) -->
-      <h4>Mois de congés</h4>
-      <div id="moisConges" style="margin-bottom: 10px;">
-        <!-- name="moisConges[]" => permet d'avoir un tableau si plusieurs mois sont cochés -->
-        <label><input type="checkbox" name="moisConges[]" value="Janvier" />Janvier</label>
-        <label><input type="checkbox" name="moisConges[]" value="Février" />Février</label>
-        <label><input type="checkbox" name="moisConges[]" value="Mars" />Mars</label>
-        <label><input type="checkbox" name="moisConges[]" value="Avril" />Avril</label>
-        <label><input type="checkbox" name="moisConges[]" value="Mai" />Mai</label>
-        <label><input type="checkbox" name="moisConges[]" value="Juin" />Juin</label>
-        <label><input type="checkbox" name="moisConges[]" value="Juillet" />Juillet</label>
-        <label><input type="checkbox" name="moisConges[]" value="Août" />Août</label>
-        <label><input type="checkbox" name="moisConges[]" value="Septembre" />Septembre</label>
-        <label><input type="checkbox" name="moisConges[]" value="Octobre" />Octobre</label>
-        <label><input type="checkbox" name="moisConges[]" value="Novembre" />Novembre</label>
-        <label><input type="checkbox" name="moisConges[]" value="Décembre" />Décembre</label>
-      </div>
-
-      <!-- Jours de congés (cases à cocher) -->
-      <h4>Jours de congés</h4>
-      <div id="joursConges" style="margin-bottom: 10px;">
-        <label><input type="checkbox" name="joursConges[]" value="Lundi" />Lundi</label>
-        <label><input type="checkbox" name="joursConges[]" value="Mardi" />Mardi</label>
-        <label><input type="checkbox" name="joursConges[]" value="Mercredi" />Mercredi</label>
-        <label><input type="checkbox" name="joursConges[]" value="Jeudi" />Jeudi</label>
-        <label><input type="checkbox" name="joursConges[]" value="Vendredi" />Vendredi</label>
-        <label><input type="checkbox" name="joursConges[]" value="Samedi" />Samedi</label>
-        <label><input type="checkbox" name="joursConges[]" value="Dimanche" />Dimanche</label>
-      </div>
-
-      <!-- Heure de début et fin de travail -->
-      <label for="heureDebut">Heure début travail :</label>
-      <input type="time" id="heureDebut" name="heureDebut" />
-
-      <label for="heureFin">Heure fin :</label>
-      <input type="time" id="heureFin" name="heureFin" />
-    </div>
-
-    <!-- 4) Tableau de consommation mensuelle -->
-    <div id="consumptionTableContainer" style="margin-top: 40px;">
-      <h3>Consommation mensuelle</h3>
-      <table
-        id="consumptionTable"
-        border="1"
-        style="border-collapse: collapse; width: 100%; text-align: center;"
-      >
-        <thead>
-          <tr>
-            <th style="width: 20%;">Mois</th>
-            <th style="width: 25%;">Consommation (€)</th>
-            <th style="width: 25%;">Consommation (kWh)</th>
-            <th style="width: 30%;">Coût par kWh (€)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Générer les lignes pour chaque mois -->
-          <script>
-            const months = [
-              "Janvier",
-              "Février",
-              "Mars",
-              "Avril",
-              "Mai",
-              "Juin",
-              "Juillet",
-              "Août",
-              "Septembre",
-              "Octobre",
-              "Novembre",
-              "Décembre",
-            ];
-
-            months.forEach((month, index) => {
-              document.write(`
-                <tr>
-                  <td>${month}</td>
-                  <td>
-                      <input
-                          type="number"
-                          id="euros_${index}"
-                          name="euros_${index}"
-                          class="euroInput"
-                          oninput="calculateCost(${index})"
-                          placeholder="€"
-                          style="width: 90%;">
-                  </td>
-                  <td>
-                      <input
-                          type="number"
-                          id="kwh_${index}"
-                          name="kwh_${index}"
-                          class="kwhInput"
-                          oninput="calculateCost(${index})"
-                          placeholder="kWh"
-                          style="width: 90%;">
-                  </td>
-                  <td id="costPerKwh_${index}">-</td>
-                </tr>
-              `);
-            });
-          </script>
-          <!-- Ligne pour les totaux -->
-          <tr>
-            <td><strong>Total annuel</strong></td>
-            <td id="totalEuros">-</td>
-            <td id="totalKwh">-</td>
-            <td id="totalCostPerKwh">-</td>
-          </tr>
-        </tbody>
-      </table>
-      <script>
-        // Fonction pour calculer le coût par kWh pour un mois donné
-        function calculateCost(index) {
-          const eurosInput = document.getElementById(`euros_${index}`);
-          const kwhInput = document.getElementById(`kwh_${index}`);
-          const costPerKwhCell = document.getElementById(`costPerKwh_${index}`);
-
-          const euros = parseFloat(eurosInput.value) || 0;
-          const kwh = parseFloat(kwhInput.value) || 0;
-
-          if (kwh > 0) {
-            const costPerKwh = (euros / kwh).toFixed(2);
-            costPerKwhCell.textContent = `${costPerKwh} €`;
-          } else {
-            costPerKwhCell.textContent = "-";
-          }
-
-          calculateTotals();
-        }
-
-        // Fonction pour calculer les totaux annuels
-        function calculateTotals() {
-          let totalEuros = 0;
-          let totalKwh = 0;
-
-          for (let i = 0; i < 12; i++) {
-            const euros = parseFloat(document.getElementById(`euros_${i}`).value) || 0;
-            const kwh = parseFloat(document.getElementById(`kwh_${i}`).value) || 0;
-
-            totalEuros += euros;
-            totalKwh += kwh;
-          }
-
-          const averageCostPerKwh = totalKwh > 0 ? (totalEuros / totalKwh).toFixed(2) : "-";
-
-          document.getElementById("totalEuros").textContent = `${totalEuros.toFixed(2)} €`;
-          document.getElementById("totalKwh").textContent = `${totalKwh.toFixed(2)} kWh`;
-          document.getElementById("totalCostPerKwh").textContent =
-            totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
-        }
-      </script>
-    </div>
-
-    <!-- 5) Commentaires -->
-    <div class="form-section">
-      <h3>Commentaires</h3>
-      <label for="comments">Commentaires :</label>
-      <textarea
-        id="comments"
-        name="comments"
-        placeholder="Entrez vos commentaires"
-      ></textarea>
-    </div>
-  </form>
-
-  <!-- Boutons PDF + gestion JSON -->
-  <button onclick="saveMapAsPDF()">Exporter en PDF</button>
-  <button id="saveToFile">Télécharger les données</button>
-  <input type="file" id="loadFromFile" style="display: none;" />
-  <button id="uploadFile">Charger un fichier</button>
 
   <script>
     /***************************************************
@@ -550,11 +688,9 @@
       const form = document.getElementById("userForm");
       const rawFormData = new FormData(form);
 
-      // Transforme FormData en véritable objet JS
-      // en gérant les champs répétés (checkbox multiples) comme des tableaux
       const formObject = {};
       rawFormData.forEach((value, key) => {
-        // Si la clé existe déjà, on convertit en tableau
+        // Si la clé existe déjà => c'est un tableau
         if (formObject[key] !== undefined) {
           if (!Array.isArray(formObject[key])) {
             formObject[key] = [formObject[key]];
@@ -603,17 +739,14 @@
             const dataValue = jsonData[key];
 
             // Gestion spéciale carte et canvas
-            if (key === "mapCenterLat" || key === "mapCenterLng" || key === "mapZoom" || key === "canvasImage") {
-              // on ne fait rien ici (on traitera après la boucle)
-              return;
+            if (["mapCenterLat","mapCenterLng","mapZoom","canvasImage"].includes(key)) {
+              return; // on traite plus bas
             }
 
             // On cherche l'élément <input> ou <select> ou <textarea> correspondant
-            // name="xxx" ou name="xxx[]" si c'est un tableau
             if (Array.isArray(dataValue)) {
-              // => c'est forcément un ensemble de cases cochées ou champs multiples
+              // => c'est un ensemble de cases cochées ou champs multiples
               dataValue.forEach((val) => {
-                // Cherche la checkbox/radio qui correspond
                 const checkbox = form.querySelector(`[name="${key}"][value="${val}"]`);
                 if (checkbox) {
                   checkbox.checked = true;
@@ -628,7 +761,7 @@
             }
           });
 
-          // Maintenant, on restaure la carte
+          // Restauration de la carte
           if (
             jsonData["mapCenterLat"] !== undefined &&
             jsonData["mapCenterLng"] !== undefined &&
