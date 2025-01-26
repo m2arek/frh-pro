@@ -258,4 +258,47 @@
             const mapContainer = document.getElementById('map-container');
             const userForm = document.getElementById('userForm');
 
-            html
+            html2canvas(mapContainer, {
+                useCORS: true,
+                scale: 2
+            }).then(canvas => {
+                const mapImage = canvas.toDataURL('image/png');
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+
+                pdf.addImage(mapImage, 'PNG', 10, 10, 190, 100);
+
+                let yOffset = 120;
+                const formData = new FormData(userForm);
+                formData.forEach((value, key) => {
+                    if (value) {
+                        pdf.text(`${key} : ${value}`, 10, yOffset);
+                        yOffset += 10;
+                    }
+                });
+
+                pdf.text("Consommation mensuelle :", 10, yOffset);
+                yOffset += 10;
+
+                for (let i = 0; i < 12; i++) {
+                    const euros = document.getElementById(`euros_${i}`).value || "0";
+                    const kwh = document.getElementById(`kwh_${i}`).value || "0";
+                    const cost = document.getElementById(`costPerKwh_${i}`).textContent || "-";
+                    pdf.text(`${months[i]} : ${euros} €, ${kwh} kWh, ${cost}`, 10, yOffset);
+                    yOffset += 10;
+                }
+
+                const totalEuros = document.getElementById("totalEuros").textContent || "-";
+                const totalKwh = document.getElementById("totalKwh").textContent || "-";
+                const totalCostPerKwh = document.getElementById("totalCostPerKwh").textContent || "-";
+                pdf.text(`Total annuel : ${totalEuros}, ${totalKwh}, ${totalCostPerKwh}`, 10, yOffset);
+
+                const companyName = document.getElementById('companyName').value;
+                const pdfFileName = companyName ? `Formulaire_${companyName}.pdf` : 'Formulaire.pdf';
+                pdf.save(pdfFileName);
+            });
+        }
+    </script>
+</body>
+</html>
