@@ -32,16 +32,7 @@
             width: 100%;
             height: 100%;
             z-index: 1000;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-            text-align: center;
-            padding: 8px;
+            pointer-events: none; /* Par défaut, n'intercepte pas les événements */
         }
         form {
             display: flex;
@@ -56,7 +47,6 @@
             border: 1px solid #ccc;
             padding: 15px;
             border-radius: 5px;
-            margin-bottom: 20px;
         }
         .form-section h3 {
             margin-top: 0;
@@ -77,7 +67,7 @@
     </style>
 </head>
 <body>
-    <h1>Dessinez sur la carte et sauvegardez en PDF</h1>
+    <h1>Carte avec Dessin, Formulaire et Consommation</h1>
     <form id="addressForm" onsubmit="return searchAddress(event);">
         <label for="address">Adresse :</label>
         <input type="text" id="address" name="address" placeholder="Entrez une adresse" required>
@@ -105,22 +95,69 @@
             <label for="Nom">Nom :</label>
             <input type="text" id="Nom" name="Nom" placeholder="Entrez le nom">
 
-            <label for="Prénom">Prénom :</label>
+             <label for="Prénom">Prénom :</label>
             <input type="text" id="Prénom" name="Prénom" placeholder="Entrez le prénom">
 
             <label for="Statut">Statut :</label>
-            <input type="text" id="Statut" name="Statut" placeholder="Statut dans ste">
+            <input type="text" id="activity" name="Statut" placeholder="Statut dans ste">
+        </div>
+
+        <div class="form-section">
+            <h3>Informations sur la toiture</h3>
+            <label for="Surface toiture">Surface toiture (m²) :</label>
+            <input type="number" id="Surface toiture" name="Surface toiture" placeholder="Entrez la surface de la toiture">
+
+            <label for="Type de toiture">Type de toiture :</label>
+            <select id="Type de toiture" name="Type de toiture">
+                <option value="" disabled selected>Choisissez un Type de toiture</option>
+                <option value="2 pentes">2 pentes</option>
+                <option value="1 pente">1 pente</option>
+                <option value="Toit plat">Toit plat</option>
+            </select>
+
+            <label for="Pente toiture">Pente toiture (°) :</label>
+            <input type="number" id="Pente toiture" name="Pente toiture" placeholder="Pente de la toiture">
+
+            <label for="Type de couverture">Type de couverture :</label>
+            <select id="Type de couverture" name="Type de couverture">
+                <option value="" disabled selected>Choisissez un type de couverture</option>
+                <option value="Bacs acier">Bacs acier</option>
+                <option value="Fibro ciment">Fibro ciment</option>
+                <option value="Tuiles">Tuiles</option>
+                <option value="Béton">Béton</option>
+            </select>
+
+            <label for="Type de charpente">Type de charpente :</label>
+            <select id="Type de charpente" name="Type de charpente">
+                <option value="" disabled selected>Choisissez un type de charpente</option>
+                <option value="Metallique">Métallique</option>
+                <option value="Bois">Bois</option>
+            </select>
+
+            <label for="Translucides">Présence de translucides :</label>
+            <select id="Translucides" name="Translucides">
+                <option value="" disabled selected>Présence de translucides o/n</option>
+                <option value="Oui">Oui</option>
+                <option value="Non">Non</option>
+            </select>
+
+            <label for="Couvrir Translucides">Couvrir Translucides :</label>
+            <select id="Couvrir Translucides" name="Couvrir Translucides">
+                <option value="" disabled selected>Couvrir Translucides o/n</option>
+                <option value="Oui">Oui</option>
+                <option value="Non">Non</option>
+            </select>
         </div>
 
         <div class="form-section">
             <h3>Consommation mensuelle</h3>
-            <table id="consumptionTable">
+            <table id="consumptionTable" border="1" style="border-collapse: collapse; width: 100%; text-align: center;">
                 <thead>
                     <tr>
-                        <th>Mois</th>
-                        <th>Consommation (€)</th>
-                        <th>Consommation (kWh)</th>
-                        <th>Coût par kWh (€)</th>
+                        <th style="width: 20%;">Mois</th>
+                        <th style="width: 25%;">Consommation (€)</th>
+                        <th style="width: 25%;">Consommation (kWh)</th>
+                        <th style="width: 30%;">Coût par kWh (€)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -134,8 +171,8 @@
                             document.write(`
                                 <tr>
                                     <td>${month}</td>
-                                    <td><input type="number" id="euros_${index}" class="euroInput" oninput="calculateCost(${index})" placeholder="€"></td>
-                                    <td><input type="number" id="kwh_${index}" class="kwhInput" oninput="calculateCost(${index})" placeholder="kWh"></td>
+                                    <td><input type="number" id="euros_${index}" class="euroInput" oninput="calculateCost(${index})" placeholder="€" style="width: 90%;"></td>
+                                    <td><input type="number" id="kwh_${index}" class="kwhInput" oninput="calculateCost(${index})" placeholder="kWh" style="width: 90%;"></td>
                                     <td id="costPerKwh_${index}">-</td>
                                 </tr>
                             `);
@@ -149,6 +186,45 @@
                     </tr>
                 </tbody>
             </table>
+
+            <script>
+                function calculateCost(index) {
+                    const eurosInput = document.getElementById(`euros_${index}`);
+                    const kwhInput = document.getElementById(`kwh_${index}`);
+                    const costPerKwhCell = document.getElementById(`costPerKwh_${index}`);
+
+                    const euros = parseFloat(eurosInput.value) || 0;
+                    const kwh = parseFloat(kwhInput.value) || 0;
+
+                    if (kwh > 0) {
+                        const costPerKwh = (euros / kwh).toFixed(2);
+                        costPerKwhCell.textContent = `${costPerKwh} €`;
+                    } else {
+                        costPerKwhCell.textContent = "-";
+                    }
+
+                    calculateTotals();
+                }
+
+                function calculateTotals() {
+                    let totalEuros = 0;
+                    let totalKwh = 0;
+
+                    for (let i = 0; i < 12; i++) {
+                        const euros = parseFloat(document.getElementById(`euros_${i}`).value) || 0;
+                        const kwh = parseFloat(document.getElementById(`kwh_${i}`).value) || 0;
+
+                        totalEuros += euros;
+                        totalKwh += kwh;
+                    }
+
+                    const averageCostPerKwh = totalKwh > 0 ? (totalEuros / totalKwh).toFixed(2) : "-";
+
+                    document.getElementById("totalEuros").textContent = `${totalEuros.toFixed(2)} €`;
+                    document.getElementById("totalKwh").textContent = `${totalKwh.toFixed(2)} kWh`;
+                    document.getElementById("totalCostPerKwh").textContent = totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
+                }
+            </script>
         </div>
 
         <div class="form-section">
@@ -167,12 +243,7 @@
     <button onclick="saveMapAsPDF()">Exporter en PDF</button>
 
     <script>
-        // Initialiser la carte
-        const map = L.map('map', {
-            zoomControl: true,
-            scrollWheelZoom: true
-        }).setView([48.8566, 2.3522], 18);
-
+        const map = L.map('map').setView([48.8566, 2.3522], 18);
         const tileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
@@ -180,15 +251,13 @@
         });
         tileLayer.addTo(map);
 
-        // Ajouter le canvas pour dessiner
         const drawingCanvas = document.getElementById('drawingCanvas');
         const ctx = drawingCanvas.getContext('2d');
-        const savedAddressField = document.getElementById('Adresse');
+        const AdresseField = document.getElementById('Adresse');
 
         let drawing = false;
         let drawingEnabled = false;
 
-        // Activer/désactiver le mode dessin
         const toggleDrawingButton = document.getElementById('toggleDrawingButton');
         toggleDrawingButton.addEventListener('click', () => {
             drawingEnabled = !drawingEnabled;
@@ -196,7 +265,6 @@
             toggleDrawingButton.textContent = drawingEnabled ? 'Désactiver le dessin' : 'Activer le dessin';
         });
 
-        // Adapter la taille du canvas
         function resizeCanvas() {
             drawingCanvas.width = drawingCanvas.offsetWidth;
             drawingCanvas.height = drawingCanvas.offsetHeight;
@@ -205,7 +273,6 @@
 
         window.addEventListener('resize', resizeCanvas);
 
-        // Dessin avec la souris
         drawingCanvas.addEventListener('mousedown', (event) => {
             if (!drawingEnabled) return;
             drawing = true;
@@ -236,7 +303,6 @@
             ctx.stroke();
         });
 
-        // Fonction pour rechercher une adresse et centrer la carte
         async function searchAddress(event) {
             event.preventDefault();
             const address = document.getElementById('address').value;
@@ -248,7 +314,7 @@
                 if (data.length > 0) {
                     const { lat, lon } = data[0];
                     map.setView([lat, lon], 18);
-                    savedAddressField.value = address;
+                    AdresseField.value = address;
                 } else {
                     alert('Adresse introuvable.');
                 }
@@ -258,7 +324,6 @@
             }
         }
 
-        // Fonction pour exporter la carte, le dessin, le formulaire et le tableau en PDF
         function saveMapAsPDF() {
             const mapContainer = document.getElementById('map-container');
             const userForm = document.getElementById('userForm');
@@ -282,22 +347,6 @@
                         yOffset += 10;
                     }
                 });
-
-                pdf.text("Consommation mensuelle :", 10, yOffset);
-                yOffset += 10;
-
-                for (let i = 0; i < 12; i++) {
-                    const euros = document.getElementById(`euros_${i}`).value || "0";
-                    const kwh = document.getElementById(`kwh_${i}`).value || "0";
-                    const cost = document.getElementById(`costPerKwh_${i}`).textContent || "-";
-                    pdf.text(`${months[i]} : ${euros} €, ${kwh} kWh, ${cost}`, 10, yOffset);
-                    yOffset += 10;
-                }
-
-                const totalEuros = document.getElementById("totalEuros").textContent || "-";
-                const totalKwh = document.getElementById("totalKwh").textContent || "-";
-                const totalCostPerKwh = document.getElementById("totalCostPerKwh").textContent || "-";
-                pdf.text(`Total annuel : ${totalEuros}, ${totalKwh}, ${totalCostPerKwh}`, 10, yOffset);
 
                 const companyName = document.getElementById('companyName').value;
                 const pdfFileName = companyName ? `Formulaire_${companyName}.pdf` : 'Formulaire.pdf';
