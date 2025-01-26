@@ -109,54 +109,7 @@
             <input type="text" id="Prénom" name="Prénom" placeholder="Entrez le prénom">
 
             <label for="Statut">Statut :</label>
-            <input type="text" id="activity" name="Statut" placeholder="Statut dans ste">
-        </div>
-
-        <div class="form-section">
-            <h3>Informations sur la toiture</h3>
-            <label for="Surface toiture">Surface toiture (m²) :</label>
-            <input type="number" id="Surface toiture" name="Surface toiture" placeholder="Entrez la surface de la toiture">
-
-            <label for="Type de toiture">Type de toiture :</label>
-            <select id="Type de toiture" name="Type de toiture">
-                <option value="" disabled selected>Choisissez un Type de toiture</option>
-                <option value="2 pentes">2 pentes</option>
-                <option value="1 pente">1 pente</option>
-                <option value="Toit plat">Toit plat</option>
-            </select>
-
-            <label for="Pente toiture">Pente toiture (°) :</label>
-            <input type="number" id="Pente toiture" name="Pente toiture" placeholder="Pente de la toiture">
-
-            <label for="Type de couverture">Type de couverture :</label>
-            <select id="Type de couverture" name="Type de couverture">
-                <option value="" disabled selected>Choisissez un type de couverture</option>
-                <option value="Bacs acier">Bacs acier</option>
-                <option value="Fibro ciment">Fibro ciment</option>
-                <option value="Tuiles">Tuiles</option>
-                <option value="Béton">Béton</option>
-            </select>
-
-            <label for="Type de charpente">Type de charpente :</label>
-            <select id="Type de charpente" name="Type de charpente">
-                <option value="" disabled selected>Choisissez un type de charpente</option>
-                <option value="Metallique">Métallique</option>
-                <option value="Bois">Bois</option>
-            </select>
-
-            <label for="Translucides">Présence de translucides :</label>
-            <select id="Translucides" name="Translucides">
-                <option value="" disabled selected>Présence de translucides o/n</option>
-                <option value="Oui">Oui</option>
-                <option value="Non">Non</option>
-            </select>
-
-            <label for="Couvrir Translucides">Couvrir Translucides :</label>
-            <select id="Couvrir Translucides" name="Couvrir Translucides">
-                <option value="" disabled selected>Couvrir Translucides o/n</option>
-                <option value="Oui">Oui</option>
-                <option value="Non">Non</option>
-            </select>
+            <input type="text" id="Statut" name="Statut" placeholder="Statut dans ste">
         </div>
 
         <div class="form-section">
@@ -197,60 +150,98 @@
                 </tbody>
             </table>
         </div>
-
-        <div class="form-section">
-            <h3>Consommation électrique générale</h3>
-            <label for="electricityUse">Utilisation électrique :</label>
-            <input type="text" id="electricityUse" name="electricityUse" placeholder="Entrez l'utilisation électrique">
-        </div>
-
-        <div class="form-section">
-            <h3>Commentaires</h3>
-            <label for="comments">Commentaires :</label>
-            <textarea id="comments" name="comments" placeholder="Entrez vos commentaires"></textarea>
-        </div>
     </form>
 
     <button onclick="saveMapAsPDF()">Exporter en PDF</button>
 
     <script>
-        // Fonction pour calculer le coût par kWh pour un mois donné
-        function calculateCost(index) {
-            const eurosInput = document.getElementById(`euros_${index}`);
-            const kwhInput = document.getElementById(`kwh_${index}`);
-            const costPerKwhCell = document.getElementById(`costPerKwh_${index}`);
+        // Initialiser la carte
+        const map = L.map('map', {
+            zoomControl: true, // Activer les boutons de zoom
+            scrollWheelZoom: true // Activer le zoom avec la molette de la souris
+        }).setView([48.8566, 2.3522], 18); // Coordonnées par défaut (Paris)
 
-            const euros = parseFloat(eurosInput.value) || 0;
-            const kwh = parseFloat(kwhInput.value) || 0;
+        const tileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google'
+        });
+        tileLayer.addTo(map);
 
-            if (kwh > 0) {
-                const costPerKwh = (euros / kwh).toFixed(2);
-                costPerKwhCell.textContent = `${costPerKwh} €`;
-            } else {
-                costPerKwhCell.textContent = "-";
-            }
+        // Ajouter le canvas pour dessiner
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const ctx = drawingCanvas.getContext('2d');
 
-            calculateTotals();
+        let drawing = false;
+        let drawingEnabled = false;
+
+        // Activer/désactiver le mode dessin
+        const toggleDrawingButton = document.getElementById('toggleDrawingButton');
+        toggleDrawingButton.addEventListener('click', () => {
+            drawingEnabled = !drawingEnabled;
+            drawingCanvas.style.pointerEvents = drawingEnabled ? 'auto' : 'none';
+            toggleDrawingButton.textContent = drawingEnabled ? 'Désactiver le dessin' : 'Activer le dessin';
+        });
+
+        // Adapter la taille du canvas à celle du conteneur de la carte
+        function resizeCanvas() {
+            drawingCanvas.width = drawingCanvas.offsetWidth;
+            drawingCanvas.height = drawingCanvas.offsetHeight;
         }
+        resizeCanvas();
 
-        // Fonction pour calculer les totaux annuels
-        function calculateTotals() {
-            let totalEuros = 0;
-            let totalKwh = 0;
+        window.addEventListener('resize', resizeCanvas);
 
-            for (let i = 0; i < 12; i++) {
-                const euros = parseFloat(document.getElementById(`euros_${i}`).value) || 0;
-                const kwh = parseFloat(document.getElementById(`kwh_${i}`).value) || 0;
+        // Dessin avec la souris
+        drawingCanvas.addEventListener('mousedown', (event) => {
+            if (!drawingEnabled) return;
+            drawing = true;
+            ctx.beginPath();
+            const rect = drawingCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            ctx.moveTo(x, y);
+        });
 
-                totalEuros += euros;
-                totalKwh += kwh;
+        drawingCanvas.addEventListener('mouseup', () => {
+            if (!drawingEnabled) return;
+            drawing = false;
+            ctx.beginPath();
+        });
+
+        drawingCanvas.addEventListener('mousemove', (event) => {
+            if (!drawing || !drawingEnabled) return;
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = 'red';
+
+            const rect = drawingCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        });
+
+        // Fonction pour rechercher une adresse et centrer la carte
+        async function searchAddress(event) {
+            event.preventDefault();
+            const address = document.getElementById('address').value;
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+                const data = await response.json();
+
+                if (data.length > 0) {
+                    const { lat, lon } = data[0];
+                    map.setView([lat, lon], 18);
+                } else {
+                    alert('Adresse introuvable.');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la recherche de l\'adresse :', error);
+                alert('Une erreur est survenue lors de la recherche de l\'adresse.');
             }
-
-            const averageCostPerKwh = totalKwh > 0 ? (totalEuros / totalKwh).toFixed(2) : "-";
-
-            document.getElementById("totalEuros").textContent = `${totalEuros.toFixed(2)} €`;
-            document.getElementById("totalKwh").textContent = `${totalKwh.toFixed(2)} kWh`;
-            document.getElementById("totalCostPerKwh").textContent = totalEuros > 0 && totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
         }
 
         // Fonction pour exporter la carte, le dessin, le formulaire et le tableau en PDF
