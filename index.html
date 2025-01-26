@@ -67,7 +67,7 @@
     </style>
 </head>
 <body>
-    <h1> Formulaire et Consommation</h1>
+    <h1> Formulaire de saisie</h1>
     <form id="addressForm" onsubmit="return searchAddress(event);">
         <label for="address">Adresse :</label>
         <input type="text" id="address" name="address" placeholder="Entrez une adresse" required>
@@ -324,50 +324,63 @@
             }
         }
 
-        function saveMapAsPDF() {
-            const mapContainer = document.getElementById('map-container');
-            const userForm = document.getElementById('userForm');
+       function saveMapAsPDF() {
+    const mapContainer = document.getElementById('map-container');
+    const userForm = document.getElementById('userForm');
 
-            html2canvas(mapContainer, {
-                useCORS: true,
-                scale: 2
-            }).then(canvas => {
-                const mapImage = canvas.toDataURL('image/png');
+    html2canvas(mapContainer, {
+        useCORS: true,
+        scale: 2
+    }).then(canvas => {
+        const mapImage = canvas.toDataURL('image/png');
 
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF();
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
 
-                pdf.addImage(mapImage, 'PNG', 10, 10, 190, 100);
+        // Ajouter l'image de la carte sur la première page
+        pdf.addImage(mapImage, 'PNG', 10, 10, 190, 100);
 
-                let yOffset = 120;
-                const formData = new FormData(userForm);
-                formData.forEach((value, key) => {
-                    if (value) {
-                        pdf.text(`${key} : ${value}`, 10, yOffset);
-                        yOffset += 10;
-                    }
-                });
+        // Ajouter les données du formulaire sur la première page
+        let yOffset = 120;
+        const formData = new FormData(userForm);
+        formData.forEach((value, key) => {
+            if (value) {
+                pdf.text(`${key} : ${value}`, 10, yOffset);
+                yOffset += 10;
+            }
+        });
 
-                // Ajouter le tableau de la consommation au PDF
-const consumptionTable = document.getElementById("consumptionTable");
-pdf.text("Consommation Mensuelle :", 10, yOffset); // Titre
-yOffset += 10;
+        // Ajouter une nouvelle page pour le tableau
+        pdf.addPage(); // Nouvelle page
+        yOffset = 10; // Réinitialiser la position pour la nouvelle page
 
-// Parcourir les lignes du tableau
-Array.from(consumptionTable.rows).forEach((row, rowIndex) => {
-    let rowText = "";
-    Array.from(row.cells).forEach((cell) => {
-        rowText += cell.innerText + " | "; // Concaténer les cellules
-    });
-    pdf.text(rowText.trim(), 10, yOffset);
-    yOffset += 10; // Espacement entre les lignes
-});
+        // Ajouter le tableau de la consommation
+        const consumptionTable = document.getElementById("consumptionTable");
+        pdf.text("Consommation Mensuelle :", 10, yOffset); // Titre du tableau
+        yOffset += 10;
 
-                const companyName = document.getElementById('companyName').value;
-                const pdfFileName = companyName ? `Formulaire_${companyName}.pdf` : 'Formulaire.pdf';
-                pdf.save(pdfFileName);
+        // Parcourir les lignes du tableau
+        Array.from(consumptionTable.rows).forEach((row, rowIndex) => {
+            let rowText = "";
+            Array.from(row.cells).forEach((cell) => {
+                rowText += cell.innerText + " | "; // Concaténer les cellules
             });
-        }
-    </script>
-</body>
-</html>
+
+            // Ajouter la ligne de texte au PDF
+            pdf.text(rowText.trim(), 10, yOffset);
+
+            yOffset += 10; // Espacement entre les lignes
+
+            // Gérer les débordements si le tableau dépasse la hauteur de la page
+            if (yOffset > 280) { // Si on dépasse la hauteur de la page
+                pdf.addPage(); // Ajouter une nouvelle page
+                yOffset = 10; // Réinitialiser à la position du haut de la nouvelle page
+            }
+        });
+
+        // Sauvegarder le PDF
+        const companyName = document.getElementById('companyName').value;
+        const pdfFileName = companyName ? `Formulaire_${companyName}.pdf` : 'Formulaire.pdf';
+        pdf.save(pdfFileName);
+    });
+}
