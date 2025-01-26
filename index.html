@@ -67,7 +67,7 @@
     </style>
 </head>
 <body>
-    <h1>55 sur la carte et sauvegardez en PDF</h1>
+    <h1>20 sur la carte et sauvegardez en PDF</h1>
     <form id="addressForm" onsubmit="return searchAddress(event);">
         <label for="address">Adresse :</label>
         <input type="text" id="address" name="address" placeholder="Entrez une adresse" required>
@@ -180,11 +180,30 @@
                         ];
 
                         months.forEach((month, index) => {
+                            // On ajoute name="euros_X" et name="kwh_X" pour l'inclusion dans FormData
                             document.write(`
                                 <tr>
                                     <td>${month}</td>
-                                    <td><input type="number" id="euros_${index}" class="euroInput" oninput="calculateCost(${index})" placeholder="€" style="width: 90%;"></td>
-                                    <td><input type="number" id="kwh_${index}" class="kwhInput" oninput="calculateCost(${index})" placeholder="kWh" style="width: 90%;"></td>
+                                    <td>
+                                        <input 
+                                            type="number" 
+                                            id="euros_${index}" 
+                                            name="euros_${index}" 
+                                            class="euroInput" 
+                                            oninput="calculateCost(${index})" 
+                                            placeholder="€" 
+                                            style="width: 90%;">
+                                    </td>
+                                    <td>
+                                        <input 
+                                            type="number" 
+                                            id="kwh_${index}" 
+                                            name="kwh_${index}" 
+                                            class="kwhInput" 
+                                            oninput="calculateCost(${index})" 
+                                            placeholder="kWh" 
+                                            style="width: 90%;">
+                                    </td>
                                     <td id="costPerKwh_${index}">-</td>
                                 </tr>
                             `);
@@ -254,8 +273,11 @@
         </div>
     </form>
 
-    <!-- Bouton d'export PDF déplacé également en bas de la page -->
+    <!-- Boutons d'export et de gestion de fichier JSON -->
     <button onclick="saveMapAsPDF()">Exporter en PDF</button>
+    <button id="saveToFile">Télécharger les données</button>
+    <input type="file" id="loadFromFile" style="display: none;" />
+    <button id="uploadFile">Charger un fichier</button>
 
     <script>
         // Initialiser la carte
@@ -393,6 +415,69 @@
                 });
             });
         }
+
+        // ******** OPTION 2 : Sauvegarder / Charger le formulaire en JSON ********
+
+        const saveButton = document.getElementById('saveToFile');
+        const loadFileInput = document.getElementById('loadFromFile');
+        const uploadButton = document.getElementById('uploadFile');
+
+        // 1) Télécharger les données au format JSON
+        saveButton.addEventListener('click', () => {
+            const form = document.getElementById('userForm');
+            const formData = new FormData(form);
+
+            const formObject = {};
+            formData.forEach((value, key) => {
+                formObject[key] = value;
+            });
+
+            // Nom de fichier dynamique : "Formulaire_{companyName}.json" ou "Formulaire.json"
+            const companyName = formObject['companyName'] ? formObject['companyName'] : 'Formulaire';
+            const fileName = `Formulaire_${companyName}.json`;
+
+            const jsonString = JSON.stringify(formObject, null, 2); // Convertir en JSON formaté
+            const blob = new Blob([jsonString], { type: 'application/json' });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+        });
+
+        // 2) Charger un fichier JSON
+        uploadButton.addEventListener('click', () => {
+            loadFileInput.click(); // Ouvrir la fenêtre de sélection de fichier
+        });
+
+        loadFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const jsonData = JSON.parse(e.target.result);
+                    const form = document.getElementById('userForm');
+
+                    // Remplir le formulaire avec les données chargées
+                    Object.keys(jsonData).forEach((key) => {
+                        // Cherche un élément correspondant au name=key
+                        const input = form.querySelector(`[name="${key}"]`);
+                        if (input) {
+                            input.value = jsonData[key];
+                        }
+                    });
+
+                    // Après chargement, on peut re-calculer le tableau
+                    // par exemple, pour les champs euros_x et kwh_x
+                    for (let i = 0; i < 12; i++) {
+                        calculateCost(i); 
+                    }
+                };
+
+                reader.readAsText(file);
+            }
+        });
     </script>
 </body>
 </html>
