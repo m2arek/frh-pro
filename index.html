@@ -67,7 +67,7 @@
     </style>
 </head>
 <body>
-    <h1>60 sur la carte et sauvegardez en PDF</h1>
+    <h1>70 sur la carte et sauvegardez en PDF</h1>
     <form id="addressForm" onsubmit="return searchAddress(event);">
         <label for="address">Adresse :</label>
         <input type="text" id="address" name="address" placeholder="Entrez une adresse" required>
@@ -137,7 +137,7 @@
                 <option value="Bois">Bois</option>
             </select>
 
-            <label for="Translucides">Presence de translucides :</label>
+            <label for="Translucides">Présence de translucides :</label>
             <select id="Translucides" name="Translucides">
                 <option value="" disabled selected>Presence de translucides o/n</option>
                 <option value="Oui">Oui</option>
@@ -155,8 +155,45 @@
         <!-- 3) Consommation électrique générale -->
         <div class="form-section">
             <h3>Consommation électrique générale</h3>
+
             <label for="electricityUse">Utilisation électrique :</label>
             <input type="text" id="electricityUse" name="electricityUse" placeholder="Entrez l'utilisation électrique">
+
+            <!-- Mois de congés (cases à cocher) -->
+            <h4>Mois de congés</h4>
+            <div id="moisConges" style="margin-bottom: 10px;">
+                <label><input type="checkbox" name="moisConges[]" value="Janvier"> Janvier</label>
+                <label><input type="checkbox" name="moisConges[]" value="Février"> Février</label>
+                <label><input type="checkbox" name="moisConges[]" value="Mars"> Mars</label>
+                <label><input type="checkbox" name="moisConges[]" value="Avril"> Avril</label>
+                <label><input type="checkbox" name="moisConges[]" value="Mai"> Mai</label>
+                <label><input type="checkbox" name="moisConges[]" value="Juin"> Juin</label>
+                <label><input type="checkbox" name="moisConges[]" value="Juillet"> Juillet</label>
+                <label><input type="checkbox" name="moisConges[]" value="Août"> Août</label>
+                <label><input type="checkbox" name="moisConges[]" value="Septembre"> Septembre</label>
+                <label><input type="checkbox" name="moisConges[]" value="Octobre"> Octobre</label>
+                <label><input type="checkbox" name="moisConges[]" value="Novembre"> Novembre</label>
+                <label><input type="checkbox" name="moisConges[]" value="Décembre"> Décembre</label>
+            </div>
+
+            <!-- Jours de congés (cases à cocher) -->
+            <h4>Jours de congés</h4>
+            <div id="joursConges" style="margin-bottom: 10px;">
+                <label><input type="checkbox" name="joursConges[]" value="Lundi"> Lundi</label>
+                <label><input type="checkbox" name="joursConges[]" value="Mardi"> Mardi</label>
+                <label><input type="checkbox" name="joursConges[]" value="Mercredi"> Mercredi</label>
+                <label><input type="checkbox" name="joursConges[]" value="Jeudi"> Jeudi</label>
+                <label><input type="checkbox" name="joursConges[]" value="Vendredi"> Vendredi</label>
+                <label><input type="checkbox" name="joursConges[]" value="Samedi"> Samedi</label>
+                <label><input type="checkbox" name="joursConges[]" value="Dimanche"> Dimanche</label>
+            </div>
+
+            <!-- Heure de début et fin de travail -->
+            <label for="heureDebut">Heure début travail :</label>
+            <input type="time" id="heureDebut" name="heureDebut">
+
+            <label for="heureFin">Heure fin :</label>
+            <input type="time" id="heureFin" name="heureFin">
         </div>
 
         <!-- Tableau de consommation : on l'intègre ici pour qu'il apparaisse avant les Commentaires -->
@@ -180,7 +217,6 @@
                         ];
 
                         months.forEach((month, index) => {
-                            // IMPORTANT: Ajouter un name pour que ces champs soient inclus dans FormData
                             document.write(`
                                 <tr>
                                     <td>${month}</td>
@@ -439,21 +475,18 @@
                 formObject[key] = value;
             });
 
-            // ********* Sauvegarde du canvas et de la carte *********
-            // Sauvegarder la position de la carte
+            // Sauvegarde du canvas et de la carte
             const center = map.getCenter();
             formObject['mapCenterLat'] = center.lat;
             formObject['mapCenterLng'] = center.lng;
             formObject['mapZoom'] = map.getZoom();
-
-            // Sauvegarder l'image du dessin (canvas) au format base64
             formObject['canvasImage'] = drawingCanvas.toDataURL();
 
             // Nom de fichier dynamique : "Formulaire_{companyName}.json" ou "Formulaire.json"
             const companyName = formObject['companyName'] ? formObject['companyName'] : 'Formulaire';
             const fileName = `Formulaire_${companyName}.json`;
 
-            const jsonString = JSON.stringify(formObject, null, 2); // Convertir en JSON formaté
+            const jsonString = JSON.stringify(formObject, null, 2);
             const blob = new Blob([jsonString], { type: 'application/json' });
 
             const link = document.createElement('a');
@@ -477,31 +510,41 @@
 
                     // Remplir le formulaire avec les données chargées
                     Object.keys(jsonData).forEach((key) => {
-                        // Si c'est un champ du formulaire (name=key), on assigne la valeur
                         const input = form.querySelector(`[name="${key}"]`);
                         if (input) {
-                            input.value = jsonData[key];
+                            // Pour les checkboxes multiples (moisConges[] / joursConges[]), il faut cocher si la valeur est présente
+                            if (Array.isArray(jsonData[key])) {
+                                // On parcourt toutes les valeurs du tableau
+                                jsonData[key].forEach((val) => {
+                                    // On cherche la checkbox correspondante
+                                    const checkbox = form.querySelector(`[name="${key}"][value="${val}"]`);
+                                    if (checkbox) {
+                                        checkbox.checked = true;
+                                    }
+                                });
+                            } else {
+                                // Cas normal: c'est un champ simple
+                                input.value = jsonData[key];
+                            }
                         }
                     });
 
-                    // ********* Restauration du canvas et de la carte *********
-                    // 1) Restaure la position de la carte
+                    // Restauration de la carte
                     if (jsonData['mapCenterLat'] && jsonData['mapCenterLng'] && jsonData['mapZoom']) {
                         map.setView([jsonData['mapCenterLat'], jsonData['mapCenterLng']], jsonData['mapZoom']);
                     }
 
-                    // 2) Restaure l'image du canvas
+                    // Restauration du canvas
                     if (jsonData['canvasImage']) {
                         const image = new Image();
                         image.onload = function() {
-                            // Effacer le canvas avant de redessiner l'image
                             ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
                             ctx.drawImage(image, 0, 0);
                         };
                         image.src = jsonData['canvasImage'];
                     }
 
-                    // Recalculer le tableau après chargement (pour mettre à jour le coût/kWh)
+                    // Recalculer le tableau après chargement (coût/kWh)
                     for (let i = 0; i < 12; i++) {
                         calculateCost(i);
                     }
