@@ -67,7 +67,7 @@
     </style>
 </head>
 <body>
-    <h1>20 sur la carte et sauvegardez en PDF</h1>
+    <h1>60 sur la carte et sauvegardez en PDF</h1>
     <form id="addressForm" onsubmit="return searchAddress(event);">
         <label for="address">Adresse :</label>
         <input type="text" id="address" name="address" placeholder="Entrez une adresse" required>
@@ -180,28 +180,28 @@
                         ];
 
                         months.forEach((month, index) => {
-                            // On ajoute name="euros_X" et name="kwh_X" pour l'inclusion dans FormData
+                            // IMPORTANT: Ajouter un name pour que ces champs soient inclus dans FormData
                             document.write(`
                                 <tr>
                                     <td>${month}</td>
                                     <td>
-                                        <input 
-                                            type="number" 
-                                            id="euros_${index}" 
-                                            name="euros_${index}" 
-                                            class="euroInput" 
-                                            oninput="calculateCost(${index})" 
-                                            placeholder="€" 
+                                        <input
+                                            type="number"
+                                            id="euros_${index}"
+                                            name="euros_${index}"
+                                            class="euroInput"
+                                            oninput="calculateCost(${index})"
+                                            placeholder="€"
                                             style="width: 90%;">
                                     </td>
                                     <td>
-                                        <input 
-                                            type="number" 
-                                            id="kwh_${index}" 
-                                            name="kwh_${index}" 
-                                            class="kwhInput" 
-                                            oninput="calculateCost(${index})" 
-                                            placeholder="kWh" 
+                                        <input
+                                            type="number"
+                                            id="kwh_${index}"
+                                            name="kwh_${index}"
+                                            class="kwhInput"
+                                            oninput="calculateCost(${index})"
+                                            placeholder="kWh"
                                             style="width: 90%;">
                                     </td>
                                     <td id="costPerKwh_${index}">-</td>
@@ -230,7 +230,7 @@
 
                     // Calculer le coût par kWh
                     if (kwh > 0) {
-                        const costPerKwh = (euros / kwh).toFixed(2); // Résultat arrondi à 2 décimales
+                        const costPerKwh = (euros / kwh).toFixed(2);
                         costPerKwhCell.textContent = `${costPerKwh} €`;
                     } else {
                         costPerKwhCell.textContent = "-";
@@ -244,7 +244,6 @@
                     let totalEuros = 0;
                     let totalKwh = 0;
 
-                    // Parcourir toutes les lignes des mois
                     for (let i = 0; i < 12; i++) {
                         const euros = parseFloat(document.getElementById(`euros_${i}`).value) || 0;
                         const kwh = parseFloat(document.getElementById(`kwh_${i}`).value) || 0;
@@ -253,19 +252,17 @@
                         totalKwh += kwh;
                     }
 
-                    // Calculer le coût moyen par kWh
                     const averageCostPerKwh = totalKwh > 0 ? (totalEuros / totalKwh).toFixed(2) : "-";
 
-                    // Mettre à jour les cellules des totaux
                     document.getElementById("totalEuros").textContent = `${totalEuros.toFixed(2)} €`;
                     document.getElementById("totalKwh").textContent = `${totalKwh.toFixed(2)} kWh`;
-                    document.getElementById("totalCostPerKwh").textContent = 
+                    document.getElementById("totalCostPerKwh").textContent =
                         totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
                 }
             </script>
         </div>
 
-        <!-- 4) Déplacement du bloc Commentaires tout en bas -->
+        <!-- 4) Le bloc Commentaires tout en bas du formulaire -->
         <div class="form-section">
             <h3>Commentaires</h3>
             <label for="comments">Commentaires :</label>
@@ -273,14 +270,16 @@
         </div>
     </form>
 
-    <!-- Boutons d'export et de gestion de fichier JSON -->
+    <!-- Boutons PDF et gestion JSON -->
     <button onclick="saveMapAsPDF()">Exporter en PDF</button>
     <button id="saveToFile">Télécharger les données</button>
     <input type="file" id="loadFromFile" style="display: none;" />
     <button id="uploadFile">Charger un fichier</button>
 
     <script>
-        // Initialiser la carte
+        // *************************
+        //  1) INIT CARTE LEAFLET
+        // *************************
         const map = L.map('map').setView([48.8566, 2.3522], 18); // Coordonnées par défaut (Paris)
         const tileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
             maxZoom: 20,
@@ -289,7 +288,9 @@
         });
         tileLayer.addTo(map);
 
-        // Ajouter le canvas pour dessiner
+        // *************************
+        //  2) DESSIN SUR CANVAS
+        // *************************
         const drawingCanvas = document.getElementById('drawingCanvas');
         const ctx = drawingCanvas.getContext('2d');
         const AdresseField = document.getElementById('Adresse');
@@ -311,7 +312,6 @@
             drawingCanvas.height = drawingCanvas.offsetHeight;
         }
         resizeCanvas();
-
         window.addEventListener('resize', resizeCanvas);
 
         // Dessin avec la souris
@@ -345,13 +345,17 @@
             ctx.stroke();
         });
 
-        // Fonction pour rechercher une adresse et centrer la carte
+        // *************************
+        //  3) RECHERCHE D'ADRESSE
+        // *************************
         async function searchAddress(event) {
             event.preventDefault();
             const address = document.getElementById('address').value;
 
             try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+                );
                 const data = await response.json();
 
                 if (data.length > 0) {
@@ -362,12 +366,14 @@
                     alert('Adresse introuvable.');
                 }
             } catch (error) {
-                console.error('Erreur lors de la recherche de l\'adresse :', error);
-                alert('Une erreur est survenue lors de la recherche de l\'adresse.');
+                console.error("Erreur lors de la recherche de l'adresse :", error);
+                alert("Une erreur est survenue lors de la recherche de l'adresse.");
             }
         }
 
-        // Fonction pour exporter la carte, le dessin, le formulaire et le tableau en PDF (en 2 pages)
+        // *************************
+        //  4) EXPORT PDF (2 pages)
+        // *************************
         function saveMapAsPDF() {
             const mapContainer = document.getElementById('map-container');
             const userForm = document.getElementById('userForm');
@@ -416,13 +422,14 @@
             });
         }
 
-        // ******** OPTION 2 : Sauvegarder / Charger le formulaire en JSON ********
-
+        // *************************
+        //  5) SAUVEGARDER / CHARGER JSON
+        // *************************
         const saveButton = document.getElementById('saveToFile');
         const loadFileInput = document.getElementById('loadFromFile');
         const uploadButton = document.getElementById('uploadFile');
 
-        // 1) Télécharger les données au format JSON
+        // 5.1) Télécharger les données au format JSON
         saveButton.addEventListener('click', () => {
             const form = document.getElementById('userForm');
             const formData = new FormData(form);
@@ -431,6 +438,16 @@
             formData.forEach((value, key) => {
                 formObject[key] = value;
             });
+
+            // ********* Sauvegarde du canvas et de la carte *********
+            // Sauvegarder la position de la carte
+            const center = map.getCenter();
+            formObject['mapCenterLat'] = center.lat;
+            formObject['mapCenterLng'] = center.lng;
+            formObject['mapZoom'] = map.getZoom();
+
+            // Sauvegarder l'image du dessin (canvas) au format base64
+            formObject['canvasImage'] = drawingCanvas.toDataURL();
 
             // Nom de fichier dynamique : "Formulaire_{companyName}.json" ou "Formulaire.json"
             const companyName = formObject['companyName'] ? formObject['companyName'] : 'Formulaire';
@@ -445,14 +462,13 @@
             link.click();
         });
 
-        // 2) Charger un fichier JSON
+        // 5.2) Charger un fichier JSON
         uploadButton.addEventListener('click', () => {
             loadFileInput.click(); // Ouvrir la fenêtre de sélection de fichier
         });
 
         loadFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
-
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -461,20 +477,35 @@
 
                     // Remplir le formulaire avec les données chargées
                     Object.keys(jsonData).forEach((key) => {
-                        // Cherche un élément correspondant au name=key
+                        // Si c'est un champ du formulaire (name=key), on assigne la valeur
                         const input = form.querySelector(`[name="${key}"]`);
                         if (input) {
                             input.value = jsonData[key];
                         }
                     });
 
-                    // Après chargement, on peut re-calculer le tableau
-                    // par exemple, pour les champs euros_x et kwh_x
+                    // ********* Restauration du canvas et de la carte *********
+                    // 1) Restaure la position de la carte
+                    if (jsonData['mapCenterLat'] && jsonData['mapCenterLng'] && jsonData['mapZoom']) {
+                        map.setView([jsonData['mapCenterLat'], jsonData['mapCenterLng']], jsonData['mapZoom']);
+                    }
+
+                    // 2) Restaure l'image du canvas
+                    if (jsonData['canvasImage']) {
+                        const image = new Image();
+                        image.onload = function() {
+                            // Effacer le canvas avant de redessiner l'image
+                            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                            ctx.drawImage(image, 0, 0);
+                        };
+                        image.src = jsonData['canvasImage'];
+                    }
+
+                    // Recalculer le tableau après chargement (pour mettre à jour le coût/kWh)
                     for (let i = 0; i < 12; i++) {
-                        calculateCost(i); 
+                        calculateCost(i);
                     }
                 };
-
                 reader.readAsText(file);
             }
         });
