@@ -1,557 +1,663 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte avec Dessin et Formulaire</title>
-    <!-- Liens CSS pour Leaflet -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Scripts JS pour Leaflet et html2canvas -->
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        #map-container {
-            position: relative;
-            width: 100%;
-            height: 500px;
-            margin-bottom: 20px;
-        }
-        #map {
-            width: 100%;
-            height: 100%;
-        }
-        #drawingCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            pointer-events: none; /* Par défaut, n'intercepte pas les événements */
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        input, button, textarea {
-            padding: 10px;
-            font-size: 16px;
-        }
-        .form-section {
-            border: 1px solid #ccc;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        .form-section h3 {
-            margin-top: 0;
-        }
-        #toggleDrawingButton {
-            margin-bottom: 20px;
-            padding: 10px 15px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #toggleDrawingButton:hover {
-            background-color: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carte avec Dessin et Formulaire</title>
+  <!-- Liens CSS pour Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <!-- Scripts JS pour Leaflet et html2canvas -->
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #map-container {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      margin-bottom: 20px;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    #drawingCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      pointer-events: none; /* Par défaut, n'intercepte pas les événements */
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    input,
+    button,
+    textarea {
+      padding: 10px;
+      font-size: 16px;
+    }
+    .form-section {
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .form-section h3 {
+      margin-top: 0;
+    }
+    #toggleDrawingButton {
+      margin-bottom: 20px;
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #toggleDrawingButton:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
-<body>
-    <h1>70 sur la carte et sauvegardez en PDF</h1>
-    <form id="addressForm" onsubmit="return searchAddress(event);">
-        <label for="address">Adresse :</label>
-        <input type="text" id="address" name="address" placeholder="Entrez une adresse" required>
-        <button type="submit">Rechercher</button>
-    </form>
 
-    <button id="toggleDrawingButton">Activer le dessin</button>
-    <div id="map-container">
-        <div id="map"></div>
-        <canvas id="drawingCanvas"></canvas>
+<body>
+  <h1>90 sur la carte et sauvegardez en PDF</h1>
+
+  <!-- Formulaire de recherche d'adresse -->
+  <form id="addressForm" onsubmit="return searchAddress(event);">
+    <label for="address">Adresse :</label>
+    <input
+      type="text"
+      id="address"
+      name="address"
+      placeholder="Entrez une adresse"
+      required
+    />
+    <button type="submit">Rechercher</button>
+  </form>
+
+  <!-- Bouton activation dessin -->
+  <button id="toggleDrawingButton">Activer le dessin</button>
+
+  <!-- Zone carte + canvas -->
+  <div id="map-container">
+    <div id="map"></div>
+    <canvas id="drawingCanvas"></canvas>
+  </div>
+
+  <!-- Formulaire principal -->
+  <form id="userForm">
+    <!-- 1) Informations société -->
+    <div class="form-section">
+      <h3>Informations sur la société</h3>
+      <label for="Adresse">Adresse entrée :</label>
+      <input type="text" id="Adresse" name="Adresse" readonly />
+
+      <label for="companyName">Société :</label>
+      <input
+        type="text"
+        id="companyName"
+        name="companyName"
+        placeholder="Entrez le nom de la société"
+      />
+
+      <label for="activity">Activité :</label>
+      <input
+        type="text"
+        id="activity"
+        name="activity"
+        placeholder="Entrez l'activité"
+      />
+
+      <label for="Nom">Nom :</label>
+      <input
+        type="text"
+        id="Nom"
+        name="Nom"
+        placeholder="Entrez le nom"
+      />
+
+      <label for="Prénom">Prénom :</label>
+      <input
+        type="text"
+        id="Prénom"
+        name="Prénom"
+        placeholder="Entrez le prénom"
+      />
+
+      <label for="Statut">Statut :</label>
+      <input
+        type="text"
+        id="activity"
+        name="Statut"
+        placeholder="Statut dans ste"
+      />
     </div>
 
-    <!-- Le formulaire principal -->
-    <form id="userForm">
-        <!-- 1) Informations société -->
-        <div class="form-section">
-            <h3>Informations sur la société</h3>
-            <label for="Adresse">Adresse entrée :</label>
-            <input type="text" id="Adresse" name="Adresse" readonly>
+    <!-- 2) Informations toiture -->
+    <div class="form-section">
+      <h3>Informations sur la toiture</h3>
+      <label for="Surface toiture">Surface toiture (m²) :</label>
+      <input
+        type="number"
+        id="Surface toiture"
+        name="Surface toiture"
+        placeholder="Entrez la surface de la toiture"
+      />
 
-            <label for="companyName">Société :</label>
-            <input type="text" id="companyName" name="companyName" placeholder="Entrez le nom de la société">
+      <label for="Type de toiture">Type de toiture :</label>
+      <select id="Type de toiture" name="Type de toiture">
+        <option value="" disabled selected>Choisissez un Type de toiture</option>
+        <option value="2 pentes">2 pentes</option>
+        <option value="1 pente">1 pente</option>
+        <option value="Toit plat">Toit plat</option>
+      </select>
 
-            <label for="activity">Activité :</label>
-            <input type="text" id="activity" name="activity" placeholder="Entrez l'activité">
+      <label for="Pente toiture">Pente toiture (°) :</label>
+      <input
+        type="number"
+        id="Pente toiture"
+        name="Pente toiture"
+        placeholder="Pente de la toiture"
+      />
 
-            <label for="Nom">Nom :</label>
-            <input type="text" id="Nom" name="Nom" placeholder="Entrez le nom">
+      <label for="Type de couverture">Type de couverture :</label>
+      <select id="Type de couverture" name="Type de couverture">
+        <option value="" disabled selected>Choisissez un type de couverture</option>
+        <option value="Bacs acier">Bacs acier</option>
+        <option value="Fibro ciment">Fibro ciment</option>
+        <option value="Tuiles">Tuiles</option>
+        <option value="Béton">Béton</option>
+      </select>
 
-            <label for="Prénom">Prénom :</label>
-            <input type="text" id="Prénom" name="Prénom" placeholder="Entrez le prénom">
+      <label for="Type de charpente">Type de charpente :</label>
+      <select id="Type de charpente" name="Type de charpente">
+        <option value="" disabled selected>Choisissez un type de charpente</option>
+        <option value="Metallique">Métallique</option>
+        <option value="Bois">Bois</option>
+      </select>
 
-            <label for="Statut">Statut :</label>
-            <input type="text" id="activity" name="Statut" placeholder="Statut dans ste">
-        </div>
+      <label for="Translucides">Présence de translucides :</label>
+      <select id="Translucides" name="Translucides">
+        <option value="" disabled selected>Presence de translucides o/n</option>
+        <option value="Oui">Oui</option>
+        <option value="Non">Non</option>
+      </select>
 
-        <!-- 2) Informations toiture -->
-        <div class="form-section">
-            <h3>Informations sur la toiture</h3>
-            <label for="Surface toiture">Surface toiture (m²) :</label>
-            <input type="number" id="Surface toiture" name="Surface toiture" placeholder="Entrez la surface de la toiture">
+      <label for="Couvrir Translucides">Couvrir Translucides :</label>
+      <select id="Couvrir Translucides" name="Couvrir Translucides">
+        <option value="" disabled selected>Couvrir Translucides o/n</option>
+        <option value="Oui">Oui</option>
+        <option value="Non">Non</option>
+      </select>
+    </div>
 
-            <label for="Type de toiture">Type de toiture :</label>
-            <select id="Type de toiture" name="Type de toiture">
-                <option value="" disabled selected>Choisissez un Type de toiture</option>
-                <option value="2 pentes">2 pentes</option>
-                <option value="1 pente">1 pente</option>
-                <option value="Toit plat">Toit plat</option>
-            </select>
+    <!-- 3) Consommation électrique générale -->
+    <div class="form-section">
+      <h3>Consommation électrique générale</h3>
 
-            <label for="Pente toiture">Pente toiture (°) :</label>
-            <input type="number" id="Pente toiture" name="Pente toiture" placeholder="Pente de la toiture">
+      <label for="electricityUse">Utilisation électrique :</label>
+      <input
+        type="text"
+        id="electricityUse"
+        name="electricityUse"
+        placeholder="Entrez l'utilisation électrique"
+      />
 
-            <label for="Type de couverture">Type de couverture :</label>
-            <select id="Type de couverture" name="Type de couverture">
-                <option value="" disabled selected>Choisissez un type de couverture</option>
-                <option value="Bacs acier">Bacs acier</option>
-                <option value="Fibro ciment">Fibro ciment</option>
-                <option value="Tuiles">Tuiles</option>
-                <option value="Béton">Béton</option>
-            </select>
+      <!-- Mois de congés (cases à cocher) -->
+      <h4>Mois de congés</h4>
+      <div id="moisConges" style="margin-bottom: 10px;">
+        <!-- name="moisConges[]" => permet d'avoir un tableau si plusieurs mois sont cochés -->
+        <label><input type="checkbox" name="moisConges[]" value="Janvier" />Janvier</label>
+        <label><input type="checkbox" name="moisConges[]" value="Février" />Février</label>
+        <label><input type="checkbox" name="moisConges[]" value="Mars" />Mars</label>
+        <label><input type="checkbox" name="moisConges[]" value="Avril" />Avril</label>
+        <label><input type="checkbox" name="moisConges[]" value="Mai" />Mai</label>
+        <label><input type="checkbox" name="moisConges[]" value="Juin" />Juin</label>
+        <label><input type="checkbox" name="moisConges[]" value="Juillet" />Juillet</label>
+        <label><input type="checkbox" name="moisConges[]" value="Août" />Août</label>
+        <label><input type="checkbox" name="moisConges[]" value="Septembre" />Septembre</label>
+        <label><input type="checkbox" name="moisConges[]" value="Octobre" />Octobre</label>
+        <label><input type="checkbox" name="moisConges[]" value="Novembre" />Novembre</label>
+        <label><input type="checkbox" name="moisConges[]" value="Décembre" />Décembre</label>
+      </div>
 
-            <label for="Type de charpente">Type de charpente :</label>
-            <select id="Type de charpente" name="Type de charpente">
-                <option value="" disabled selected>Choisissez un type de charpente</option>
-                <option value="Metallique">Métallique</option>
-                <option value="Bois">Bois</option>
-            </select>
+      <!-- Jours de congés (cases à cocher) -->
+      <h4>Jours de congés</h4>
+      <div id="joursConges" style="margin-bottom: 10px;">
+        <label><input type="checkbox" name="joursConges[]" value="Lundi" />Lundi</label>
+        <label><input type="checkbox" name="joursConges[]" value="Mardi" />Mardi</label>
+        <label><input type="checkbox" name="joursConges[]" value="Mercredi" />Mercredi</label>
+        <label><input type="checkbox" name="joursConges[]" value="Jeudi" />Jeudi</label>
+        <label><input type="checkbox" name="joursConges[]" value="Vendredi" />Vendredi</label>
+        <label><input type="checkbox" name="joursConges[]" value="Samedi" />Samedi</label>
+        <label><input type="checkbox" name="joursConges[]" value="Dimanche" />Dimanche</label>
+      </div>
 
-            <label for="Translucides">Présence de translucides :</label>
-            <select id="Translucides" name="Translucides">
-                <option value="" disabled selected>Presence de translucides o/n</option>
-                <option value="Oui">Oui</option>
-                <option value="Non">Non</option>
-            </select>
+      <!-- Heure de début et fin de travail -->
+      <label for="heureDebut">Heure début travail :</label>
+      <input type="time" id="heureDebut" name="heureDebut" />
 
-            <label for="Couvrir Translucides">Couvrir Translucides :</label>
-            <select id="Couvrir Translucides" name="Couvrir Translucides">
-                <option value="" disabled selected>Couvrir Translucides o/n</option>
-                <option value="Oui">Oui</option>
-                <option value="Non">Non</option>
-            </select>
-        </div>
+      <label for="heureFin">Heure fin :</label>
+      <input type="time" id="heureFin" name="heureFin" />
+    </div>
 
-        <!-- 3) Consommation électrique générale -->
-        <div class="form-section">
-            <h3>Consommation électrique générale</h3>
+    <!-- 4) Tableau de consommation mensuelle -->
+    <div id="consumptionTableContainer" style="margin-top: 40px;">
+      <h3>Consommation mensuelle</h3>
+      <table
+        id="consumptionTable"
+        border="1"
+        style="border-collapse: collapse; width: 100%; text-align: center;"
+      >
+        <thead>
+          <tr>
+            <th style="width: 20%;">Mois</th>
+            <th style="width: 25%;">Consommation (€)</th>
+            <th style="width: 25%;">Consommation (kWh)</th>
+            <th style="width: 30%;">Coût par kWh (€)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Générer les lignes pour chaque mois -->
+          <script>
+            const months = [
+              "Janvier",
+              "Février",
+              "Mars",
+              "Avril",
+              "Mai",
+              "Juin",
+              "Juillet",
+              "Août",
+              "Septembre",
+              "Octobre",
+              "Novembre",
+              "Décembre",
+            ];
 
-            <label for="electricityUse">Utilisation électrique :</label>
-            <input type="text" id="electricityUse" name="electricityUse" placeholder="Entrez l'utilisation électrique">
-
-            <!-- Mois de congés (cases à cocher) -->
-            <h4>Mois de congés</h4>
-            <div id="moisConges" style="margin-bottom: 10px;">
-                <label><input type="checkbox" name="moisConges[]" value="Janvier"> Janvier</label>
-                <label><input type="checkbox" name="moisConges[]" value="Février"> Février</label>
-                <label><input type="checkbox" name="moisConges[]" value="Mars"> Mars</label>
-                <label><input type="checkbox" name="moisConges[]" value="Avril"> Avril</label>
-                <label><input type="checkbox" name="moisConges[]" value="Mai"> Mai</label>
-                <label><input type="checkbox" name="moisConges[]" value="Juin"> Juin</label>
-                <label><input type="checkbox" name="moisConges[]" value="Juillet"> Juillet</label>
-                <label><input type="checkbox" name="moisConges[]" value="Août"> Août</label>
-                <label><input type="checkbox" name="moisConges[]" value="Septembre"> Septembre</label>
-                <label><input type="checkbox" name="moisConges[]" value="Octobre"> Octobre</label>
-                <label><input type="checkbox" name="moisConges[]" value="Novembre"> Novembre</label>
-                <label><input type="checkbox" name="moisConges[]" value="Décembre"> Décembre</label>
-            </div>
-
-            <!-- Jours de congés (cases à cocher) -->
-            <h4>Jours de congés</h4>
-            <div id="joursConges" style="margin-bottom: 10px;">
-                <label><input type="checkbox" name="joursConges[]" value="Lundi"> Lundi</label>
-                <label><input type="checkbox" name="joursConges[]" value="Mardi"> Mardi</label>
-                <label><input type="checkbox" name="joursConges[]" value="Mercredi"> Mercredi</label>
-                <label><input type="checkbox" name="joursConges[]" value="Jeudi"> Jeudi</label>
-                <label><input type="checkbox" name="joursConges[]" value="Vendredi"> Vendredi</label>
-                <label><input type="checkbox" name="joursConges[]" value="Samedi"> Samedi</label>
-                <label><input type="checkbox" name="joursConges[]" value="Dimanche"> Dimanche</label>
-            </div>
-
-            <!-- Heure de début et fin de travail -->
-            <label for="heureDebut">Heure début travail :</label>
-            <input type="time" id="heureDebut" name="heureDebut">
-
-            <label for="heureFin">Heure fin :</label>
-            <input type="time" id="heureFin" name="heureFin">
-        </div>
-
-        <!-- Tableau de consommation : on l'intègre ici pour qu'il apparaisse avant les Commentaires -->
-        <div id="consumptionTableContainer" style="margin-top: 40px;">
-            <h3>Consommation mensuelle</h3>
-            <table id="consumptionTable" border="1" style="border-collapse: collapse; width: 100%; text-align: center;">
-                <thead>
-                    <tr>
-                        <th style="width: 20%;">Mois</th>
-                        <th style="width: 25%;">Consommation (€)</th>
-                        <th style="width: 25%;">Consommation (kWh)</th>
-                        <th style="width: 30%;">Coût par kWh (€)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Générer les lignes pour chaque mois -->
-                    <script>
-                        const months = [
-                            "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-                            "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
-                        ];
-
-                        months.forEach((month, index) => {
-                            document.write(`
-                                <tr>
-                                    <td>${month}</td>
-                                    <td>
-                                        <input
-                                            type="number"
-                                            id="euros_${index}"
-                                            name="euros_${index}"
-                                            class="euroInput"
-                                            oninput="calculateCost(${index})"
-                                            placeholder="€"
-                                            style="width: 90%;">
-                                    </td>
-                                    <td>
-                                        <input
-                                            type="number"
-                                            id="kwh_${index}"
-                                            name="kwh_${index}"
-                                            class="kwhInput"
-                                            oninput="calculateCost(${index})"
-                                            placeholder="kWh"
-                                            style="width: 90%;">
-                                    </td>
-                                    <td id="costPerKwh_${index}">-</td>
-                                </tr>
-                            `);
-                        });
-                    </script>
-                    <!-- Ligne pour les totaux -->
-                    <tr>
-                        <td><strong>Total annuel</strong></td>
-                        <td id="totalEuros">-</td>
-                        <td id="totalKwh">-</td>
-                        <td id="totalCostPerKwh">-</td>
-                    </tr>
-                </tbody>
-            </table>
-            <script>
-                // Fonction pour calculer le coût par kWh pour un mois donné
-                function calculateCost(index) {
-                    const eurosInput = document.getElementById(`euros_${index}`);
-                    const kwhInput = document.getElementById(`kwh_${index}`);
-                    const costPerKwhCell = document.getElementById(`costPerKwh_${index}`);
-
-                    const euros = parseFloat(eurosInput.value) || 0;
-                    const kwh = parseFloat(kwhInput.value) || 0;
-
-                    // Calculer le coût par kWh
-                    if (kwh > 0) {
-                        const costPerKwh = (euros / kwh).toFixed(2);
-                        costPerKwhCell.textContent = `${costPerKwh} €`;
-                    } else {
-                        costPerKwhCell.textContent = "-";
-                    }
-
-                    calculateTotals(); // Met à jour les totaux
-                }
-
-                // Fonction pour calculer les totaux annuels
-                function calculateTotals() {
-                    let totalEuros = 0;
-                    let totalKwh = 0;
-
-                    for (let i = 0; i < 12; i++) {
-                        const euros = parseFloat(document.getElementById(`euros_${i}`).value) || 0;
-                        const kwh = parseFloat(document.getElementById(`kwh_${i}`).value) || 0;
-
-                        totalEuros += euros;
-                        totalKwh += kwh;
-                    }
-
-                    const averageCostPerKwh = totalKwh > 0 ? (totalEuros / totalKwh).toFixed(2) : "-";
-
-                    document.getElementById("totalEuros").textContent = `${totalEuros.toFixed(2)} €`;
-                    document.getElementById("totalKwh").textContent = `${totalKwh.toFixed(2)} kWh`;
-                    document.getElementById("totalCostPerKwh").textContent =
-                        totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
-                }
-            </script>
-        </div>
-
-        <!-- 4) Le bloc Commentaires tout en bas du formulaire -->
-        <div class="form-section">
-            <h3>Commentaires</h3>
-            <label for="comments">Commentaires :</label>
-            <textarea id="comments" name="comments" placeholder="Entrez vos commentaires"></textarea>
-        </div>
-    </form>
-
-    <!-- Boutons PDF et gestion JSON -->
-    <button onclick="saveMapAsPDF()">Exporter en PDF</button>
-    <button id="saveToFile">Télécharger les données</button>
-    <input type="file" id="loadFromFile" style="display: none;" />
-    <button id="uploadFile">Charger un fichier</button>
-
-    <script>
-        // *************************
-        //  1) INIT CARTE LEAFLET
-        // *************************
-        const map = L.map('map').setView([48.8566, 2.3522], 18); // Coordonnées par défaut (Paris)
-        const tileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            attribution: '© Google'
-        });
-        tileLayer.addTo(map);
-
-        // *************************
-        //  2) DESSIN SUR CANVAS
-        // *************************
-        const drawingCanvas = document.getElementById('drawingCanvas');
-        const ctx = drawingCanvas.getContext('2d');
-        const AdresseField = document.getElementById('Adresse');
-
-        let drawing = false;
-        let drawingEnabled = false;
-
-        // Activer/désactiver le mode dessin
-        const toggleDrawingButton = document.getElementById('toggleDrawingButton');
-        toggleDrawingButton.addEventListener('click', () => {
-            drawingEnabled = !drawingEnabled;
-            drawingCanvas.style.pointerEvents = drawingEnabled ? 'auto' : 'none';
-            toggleDrawingButton.textContent = drawingEnabled ? 'Désactiver le dessin' : 'Activer le dessin';
-        });
-
-        // Adapter la taille du canvas à celle du conteneur de la carte
-        function resizeCanvas() {
-            drawingCanvas.width = drawingCanvas.offsetWidth;
-            drawingCanvas.height = drawingCanvas.offsetHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        // Dessin avec la souris
-        drawingCanvas.addEventListener('mousedown', (event) => {
-            if (!drawingEnabled) return;
-            drawing = true;
-            ctx.beginPath();
-            const rect = drawingCanvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            ctx.moveTo(x, y);
-        });
-
-        drawingCanvas.addEventListener('mouseup', () => {
-            if (!drawingEnabled) return;
-            drawing = false;
-            ctx.beginPath();
-        });
-
-        drawingCanvas.addEventListener('mousemove', (event) => {
-            if (!drawing || !drawingEnabled) return;
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = 'red';
-
-            const rect = drawingCanvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-
-            ctx.lineTo(x, y);
-            ctx.stroke();
-        });
-
-        // *************************
-        //  3) RECHERCHE D'ADRESSE
-        // *************************
-        async function searchAddress(event) {
-            event.preventDefault();
-            const address = document.getElementById('address').value;
-
-            try {
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
-                );
-                const data = await response.json();
-
-                if (data.length > 0) {
-                    const { lat, lon } = data[0];
-                    map.setView([lat, lon], 18);
-                    AdresseField.value = address; // Sauvegarder l'adresse dans le formulaire
-                } else {
-                    alert('Adresse introuvable.');
-                }
-            } catch (error) {
-                console.error("Erreur lors de la recherche de l'adresse :", error);
-                alert("Une erreur est survenue lors de la recherche de l'adresse.");
-            }
-        }
-
-        // *************************
-        //  4) EXPORT PDF (2 pages)
-        // *************************
-        function saveMapAsPDF() {
-            const mapContainer = document.getElementById('map-container');
-            const userForm = document.getElementById('userForm');
-
-            // 1) Capture de la carte + dessin
-            html2canvas(mapContainer, {
-                useCORS: true,
-                scale: 2 // Améliore la qualité
-            }).then(canvas => {
-                const mapImage = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF();
-
-                // Ajout de l'image (carte + dessin) en page 1
-                pdf.addImage(mapImage, 'PNG', 10, 10, 190, 100);
-
-                // Ajout des champs du formulaire en dessous (page 1)
-                let yOffset = 120;
-                const formData = new FormData(userForm);
-                formData.forEach((value, key) => {
-                    if (value) {
-                        pdf.text(`${key} : ${value}`, 10, yOffset);
-                        yOffset += 10;
-                    }
-                });
-
-                // 2) Création d'une nouvelle page pour le tableau de consommation
-                pdf.addPage();
-                pdf.text('Consommation mensuelle', 10, 10);
-
-                // 3) Capture du tableau de consommation (page 2)
-                html2canvas(document.getElementById('consumptionTableContainer'), {
-                    useCORS: true,
-                    scale: 2
-                }).then(tableCanvas => {
-                    const tableImage = tableCanvas.toDataURL('image/png');
-
-                    // On insère le tableau sur la seconde page
-                    pdf.addImage(tableImage, 'PNG', 10, 20, 190, 0);
-
-                    // 4) Finalement, on sauvegarde le PDF
-                    const companyName = document.getElementById('companyName').value;
-                    const pdfFileName = companyName ? `Formulaire_${companyName}.pdf` : 'Formulaire.pdf';
-                    pdf.save(pdfFileName);
-                });
+            months.forEach((month, index) => {
+              document.write(`
+                <tr>
+                  <td>${month}</td>
+                  <td>
+                      <input
+                          type="number"
+                          id="euros_${index}"
+                          name="euros_${index}"
+                          class="euroInput"
+                          oninput="calculateCost(${index})"
+                          placeholder="€"
+                          style="width: 90%;">
+                  </td>
+                  <td>
+                      <input
+                          type="number"
+                          id="kwh_${index}"
+                          name="kwh_${index}"
+                          class="kwhInput"
+                          oninput="calculateCost(${index})"
+                          placeholder="kWh"
+                          style="width: 90%;">
+                  </td>
+                  <td id="costPerKwh_${index}">-</td>
+                </tr>
+              `);
             });
+          </script>
+          <!-- Ligne pour les totaux -->
+          <tr>
+            <td><strong>Total annuel</strong></td>
+            <td id="totalEuros">-</td>
+            <td id="totalKwh">-</td>
+            <td id="totalCostPerKwh">-</td>
+          </tr>
+        </tbody>
+      </table>
+      <script>
+        // Fonction pour calculer le coût par kWh pour un mois donné
+        function calculateCost(index) {
+          const eurosInput = document.getElementById(`euros_${index}`);
+          const kwhInput = document.getElementById(`kwh_${index}`);
+          const costPerKwhCell = document.getElementById(`costPerKwh_${index}`);
+
+          const euros = parseFloat(eurosInput.value) || 0;
+          const kwh = parseFloat(kwhInput.value) || 0;
+
+          if (kwh > 0) {
+            const costPerKwh = (euros / kwh).toFixed(2);
+            costPerKwhCell.textContent = `${costPerKwh} €`;
+          } else {
+            costPerKwhCell.textContent = "-";
+          }
+
+          calculateTotals();
         }
 
-        // *************************
-        //  5) SAUVEGARDER / CHARGER JSON
-        // *************************
-        const saveButton = document.getElementById('saveToFile');
-        const loadFileInput = document.getElementById('loadFromFile');
-        const uploadButton = document.getElementById('uploadFile');
+        // Fonction pour calculer les totaux annuels
+        function calculateTotals() {
+          let totalEuros = 0;
+          let totalKwh = 0;
 
-        // 5.1) Télécharger les données au format JSON
-        saveButton.addEventListener('click', () => {
-            const form = document.getElementById('userForm');
-            const formData = new FormData(form);
+          for (let i = 0; i < 12; i++) {
+            const euros = parseFloat(document.getElementById(`euros_${i}`).value) || 0;
+            const kwh = parseFloat(document.getElementById(`kwh_${i}`).value) || 0;
 
-            const formObject = {};
-            formData.forEach((value, key) => {
-                formObject[key] = value;
-            });
+            totalEuros += euros;
+            totalKwh += kwh;
+          }
 
-            // Sauvegarde du canvas et de la carte
-            const center = map.getCenter();
-            formObject['mapCenterLat'] = center.lat;
-            formObject['mapCenterLng'] = center.lng;
-            formObject['mapZoom'] = map.getZoom();
-            formObject['canvasImage'] = drawingCanvas.toDataURL();
+          const averageCostPerKwh = totalKwh > 0 ? (totalEuros / totalKwh).toFixed(2) : "-";
 
-            // Nom de fichier dynamique : "Formulaire_{companyName}.json" ou "Formulaire.json"
-            const companyName = formObject['companyName'] ? formObject['companyName'] : 'Formulaire';
-            const fileName = `Formulaire_${companyName}.json`;
+          document.getElementById("totalEuros").textContent = `${totalEuros.toFixed(2)} €`;
+          document.getElementById("totalKwh").textContent = `${totalKwh.toFixed(2)} kWh`;
+          document.getElementById("totalCostPerKwh").textContent =
+            totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
+        }
+      </script>
+    </div>
 
-            const jsonString = JSON.stringify(formObject, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
+    <!-- 5) Commentaires -->
+    <div class="form-section">
+      <h3>Commentaires</h3>
+      <label for="comments">Commentaires :</label>
+      <textarea
+        id="comments"
+        name="comments"
+        placeholder="Entrez vos commentaires"
+      ></textarea>
+    </div>
+  </form>
 
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            link.click();
+  <!-- Boutons PDF + gestion JSON -->
+  <button onclick="saveMapAsPDF()">Exporter en PDF</button>
+  <button id="saveToFile">Télécharger les données</button>
+  <input type="file" id="loadFromFile" style="display: none;" />
+  <button id="uploadFile">Charger un fichier</button>
+
+  <script>
+    /***************************************************
+     * 1) INITIALISER LA CARTE LEAFLET
+     ***************************************************/
+    const map = L.map("map").setView([48.8566, 2.3522], 18); // Paris par défaut
+    const tileLayer = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
+      maxZoom: 20,
+      subdomains: ["mt0", "mt1", "mt2", "mt3"],
+      attribution: "© Google",
+    });
+    tileLayer.addTo(map);
+
+    /***************************************************
+     * 2) DESSIN SUR CANVAS
+     ***************************************************/
+    const drawingCanvas = document.getElementById("drawingCanvas");
+    const ctx = drawingCanvas.getContext("2d");
+    const AdresseField = document.getElementById("Adresse");
+
+    let drawing = false;
+    let drawingEnabled = false;
+
+    // Activer/désactiver le mode dessin
+    const toggleDrawingButton = document.getElementById("toggleDrawingButton");
+    toggleDrawingButton.addEventListener("click", () => {
+      drawingEnabled = !drawingEnabled;
+      drawingCanvas.style.pointerEvents = drawingEnabled ? "auto" : "none";
+      toggleDrawingButton.textContent = drawingEnabled
+        ? "Désactiver le dessin"
+        : "Activer le dessin";
+    });
+
+    // Adapter la taille du canvas à celle du conteneur de la carte
+    function resizeCanvas() {
+      drawingCanvas.width = drawingCanvas.offsetWidth;
+      drawingCanvas.height = drawingCanvas.offsetHeight;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    // Dessin avec la souris
+    drawingCanvas.addEventListener("mousedown", (event) => {
+      if (!drawingEnabled) return;
+      drawing = true;
+      ctx.beginPath();
+      const rect = drawingCanvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      ctx.moveTo(x, y);
+    });
+
+    drawingCanvas.addEventListener("mouseup", () => {
+      if (!drawingEnabled) return;
+      drawing = false;
+      ctx.beginPath();
+    });
+
+    drawingCanvas.addEventListener("mousemove", (event) => {
+      if (!drawing || !drawingEnabled) return;
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "red";
+
+      const rect = drawingCanvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    });
+
+    /***************************************************
+     * 3) RECHERCHE D'ADRESSE
+     ***************************************************/
+    async function searchAddress(event) {
+      event.preventDefault();
+      const address = document.getElementById("address").value;
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+        );
+        const data = await response.json();
+
+        if (data.length > 0) {
+          const { lat, lon } = data[0];
+          map.setView([lat, lon], 18);
+          AdresseField.value = address; // Sauvegarder l'adresse dans le formulaire
+        } else {
+          alert("Adresse introuvable.");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la recherche de l'adresse :", error);
+        alert("Une erreur est survenue lors de la recherche de l'adresse.");
+      }
+    }
+
+    /***************************************************
+     * 4) EXPORT PDF (2 PAGES)
+     ***************************************************/
+    function saveMapAsPDF() {
+      const mapContainer = document.getElementById("map-container");
+      const userForm = document.getElementById("userForm");
+
+      // 1) Capture de la carte + dessin
+      html2canvas(mapContainer, {
+        useCORS: true,
+        scale: 2, // Meilleure qualité
+      }).then((canvas) => {
+        const mapImage = canvas.toDataURL("image/png");
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+
+        // Ajout de l'image (carte + dessin) en page 1
+        pdf.addImage(mapImage, "PNG", 10, 10, 190, 100);
+
+        // Ajout des champs du formulaire en dessous (page 1)
+        let yOffset = 120;
+        const formData = new FormData(userForm);
+
+        formData.forEach((value, key) => {
+          if (value) {
+            pdf.text(`${key} : ${value}`, 10, yOffset);
+            yOffset += 10;
+          }
         });
 
-        // 5.2) Charger un fichier JSON
-        uploadButton.addEventListener('click', () => {
-            loadFileInput.click(); // Ouvrir la fenêtre de sélection de fichier
+        // 2) Créer une nouvelle page pour le tableau de consommation
+        pdf.addPage();
+        pdf.text("Consommation mensuelle", 10, 10);
+
+        // 3) Capture du tableau de consommation (page 2)
+        html2canvas(document.getElementById("consumptionTableContainer"), {
+          useCORS: true,
+          scale: 2,
+        }).then((tableCanvas) => {
+          const tableImage = tableCanvas.toDataURL("image/png");
+
+          // On insère le tableau sur la seconde page
+          pdf.addImage(tableImage, "PNG", 10, 20, 190, 0);
+
+          // 4) Sauvegarde du PDF
+          const companyName = document.getElementById("companyName").value;
+          const pdfFileName = companyName
+            ? `Formulaire_${companyName}.pdf`
+            : "Formulaire.pdf";
+          pdf.save(pdfFileName);
         });
+      });
+    }
 
-        loadFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const jsonData = JSON.parse(e.target.result);
-                    const form = document.getElementById('userForm');
+    /***************************************************
+     * 5) SAUVEGARDER / CHARGER JSON
+     ***************************************************/
+    const saveButton = document.getElementById("saveToFile");
+    const loadFileInput = document.getElementById("loadFromFile");
+    const uploadButton = document.getElementById("uploadFile");
 
-                    // Remplir le formulaire avec les données chargées
-                    Object.keys(jsonData).forEach((key) => {
-                        const input = form.querySelector(`[name="${key}"]`);
-                        if (input) {
-                            // Pour les checkboxes multiples (moisConges[] / joursConges[]), il faut cocher si la valeur est présente
-                            if (Array.isArray(jsonData[key])) {
-                                // On parcourt toutes les valeurs du tableau
-                                jsonData[key].forEach((val) => {
-                                    // On cherche la checkbox correspondante
-                                    const checkbox = form.querySelector(`[name="${key}"][value="${val}"]`);
-                                    if (checkbox) {
-                                        checkbox.checked = true;
-                                    }
-                                });
-                            } else {
-                                // Cas normal: c'est un champ simple
-                                input.value = jsonData[key];
-                            }
-                        }
-                    });
+    // 5.1) Télécharger les données au format JSON
+    saveButton.addEventListener("click", () => {
+      const form = document.getElementById("userForm");
+      const rawFormData = new FormData(form);
 
-                    // Restauration de la carte
-                    if (jsonData['mapCenterLat'] && jsonData['mapCenterLng'] && jsonData['mapZoom']) {
-                        map.setView([jsonData['mapCenterLat'], jsonData['mapCenterLng']], jsonData['mapZoom']);
-                    }
+      // Transforme FormData en véritable objet JS
+      // en gérant les champs répétés (checkbox multiples) comme des tableaux
+      const formObject = {};
+      rawFormData.forEach((value, key) => {
+        // Si la clé existe déjà, on convertit en tableau
+        if (formObject[key] !== undefined) {
+          if (!Array.isArray(formObject[key])) {
+            formObject[key] = [formObject[key]];
+          }
+          formObject[key].push(value);
+        } else {
+          formObject[key] = value;
+        }
+      });
 
-                    // Restauration du canvas
-                    if (jsonData['canvasImage']) {
-                        const image = new Image();
-                        image.onload = function() {
-                            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-                            ctx.drawImage(image, 0, 0);
-                        };
-                        image.src = jsonData['canvasImage'];
-                    }
+      // Sauvegarde du centre/zoom de la carte et du dessin
+      const center = map.getCenter();
+      formObject["mapCenterLat"] = center.lat;
+      formObject["mapCenterLng"] = center.lng;
+      formObject["mapZoom"] = map.getZoom();
+      formObject["canvasImage"] = drawingCanvas.toDataURL();
 
-                    // Recalculer le tableau après chargement (coût/kWh)
-                    for (let i = 0; i < 12; i++) {
-                        calculateCost(i);
-                    }
-                };
-                reader.readAsText(file);
+      // Nom de fichier dynamique
+      const companyName = formObject["companyName"] || "Formulaire";
+      const fileName = `Formulaire_${companyName}.json`;
+
+      const jsonString = JSON.stringify(formObject, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+    });
+
+    // 5.2) Charger un fichier JSON
+    uploadButton.addEventListener("click", () => {
+      loadFileInput.click(); // Ouvrir la fenêtre de sélection de fichier
+    });
+
+    loadFileInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const jsonData = JSON.parse(e.target.result);
+          const form = document.getElementById("userForm");
+
+          // On parcourt toutes les clés du JSON
+          Object.keys(jsonData).forEach((key) => {
+            const dataValue = jsonData[key];
+
+            // Gestion spéciale carte et canvas
+            if (key === "mapCenterLat" || key === "mapCenterLng" || key === "mapZoom" || key === "canvasImage") {
+              // on ne fait rien ici (on traitera après la boucle)
+              return;
             }
-        });
-    </script>
+
+            // On cherche l'élément <input> ou <select> ou <textarea> correspondant
+            // name="xxx" ou name="xxx[]" si c'est un tableau
+            if (Array.isArray(dataValue)) {
+              // => c'est forcément un ensemble de cases cochées ou champs multiples
+              dataValue.forEach((val) => {
+                // Cherche la checkbox/radio qui correspond
+                const checkbox = form.querySelector(`[name="${key}"][value="${val}"]`);
+                if (checkbox) {
+                  checkbox.checked = true;
+                }
+              });
+            } else {
+              // Champ simple (text, time, select, textarea...)
+              const input = form.querySelector(`[name="${key}"]`);
+              if (input) {
+                input.value = dataValue;
+              }
+            }
+          });
+
+          // Maintenant, on restaure la carte
+          if (
+            jsonData["mapCenterLat"] !== undefined &&
+            jsonData["mapCenterLng"] !== undefined &&
+            jsonData["mapZoom"] !== undefined
+          ) {
+            map.setView(
+              [jsonData["mapCenterLat"], jsonData["mapCenterLng"]],
+              jsonData["mapZoom"]
+            );
+          }
+
+          // Restauration du dessin (canvas)
+          if (jsonData["canvasImage"]) {
+            const image = new Image();
+            image.onload = function () {
+              ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+              ctx.drawImage(image, 0, 0);
+            };
+            image.src = jsonData["canvasImage"];
+          }
+
+          // Recalculer le tableau après chargement (coût/kWh)
+          for (let i = 0; i < 12; i++) {
+            calculateCost(i);
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+  </script>
 </body>
 </html>
