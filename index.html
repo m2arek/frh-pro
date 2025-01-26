@@ -67,7 +67,7 @@
     </style>
 </head>
 <body>
-    <h1>30 sur la carte et sauvegardez en PDF</h1>
+    <h1>55 sur la carte et sauvegardez en PDF</h1>
     <form id="addressForm" onsubmit="return searchAddress(event);">
         <label for="address">Adresse :</label>
         <input type="text" id="address" name="address" placeholder="Entrez une adresse" required>
@@ -80,7 +80,9 @@
         <canvas id="drawingCanvas"></canvas>
     </div>
 
+    <!-- Le formulaire principal -->
     <form id="userForm">
+        <!-- 1) Informations société -->
         <div class="form-section">
             <h3>Informations sur la société</h3>
             <label for="Adresse">Adresse entrée :</label>
@@ -95,22 +97,20 @@
             <label for="Nom">Nom :</label>
             <input type="text" id="Nom" name="Nom" placeholder="Entrez le nom">
 
-             <label for="Prénom">Prénom :</label>
+            <label for="Prénom">Prénom :</label>
             <input type="text" id="Prénom" name="Prénom" placeholder="Entrez le prénom">
-
-
 
             <label for="Statut">Statut :</label>
             <input type="text" id="activity" name="Statut" placeholder="Statut dans ste">
         </div>
 
+        <!-- 2) Informations toiture -->
         <div class="form-section">
             <h3>Informations sur la toiture</h3>
             <label for="Surface toiture">Surface toiture (m²) :</label>
             <input type="number" id="Surface toiture" name="Surface toiture" placeholder="Entrez la surface de la toiture">
 
-
-             <label for="Type de toiture">Type de toiture :</label>
+            <label for="Type de toiture">Type de toiture :</label>
             <select id="Type de toiture" name="Type de toiture">
                 <option value="" disabled selected>Choisissez un Type de toiture</option>
                 <option value="2 pentes">2 pentes</option>
@@ -137,7 +137,7 @@
                 <option value="Bois">Bois</option>
             </select>
 
-             <label for="Translucides">Presence de translucides :</label>
+            <label for="Translucides">Presence de translucides :</label>
             <select id="Translucides" name="Translucides">
                 <option value="" disabled selected>Presence de translucides o/n</option>
                 <option value="Oui">Oui</option>
@@ -152,12 +152,101 @@
             </select>
         </div>
 
+        <!-- 3) Consommation électrique générale -->
         <div class="form-section">
             <h3>Consommation électrique générale</h3>
             <label for="electricityUse">Utilisation électrique :</label>
             <input type="text" id="electricityUse" name="electricityUse" placeholder="Entrez l'utilisation électrique">
         </div>
 
+        <!-- Tableau de consommation : on l'intègre ici pour qu'il apparaisse avant les Commentaires -->
+        <div id="consumptionTableContainer" style="margin-top: 40px;">
+            <h3>Consommation mensuelle</h3>
+            <table id="consumptionTable" border="1" style="border-collapse: collapse; width: 100%; text-align: center;">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">Mois</th>
+                        <th style="width: 25%;">Consommation (€)</th>
+                        <th style="width: 25%;">Consommation (kWh)</th>
+                        <th style="width: 30%;">Coût par kWh (€)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Générer les lignes pour chaque mois -->
+                    <script>
+                        const months = [
+                            "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                            "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+                        ];
+
+                        months.forEach((month, index) => {
+                            document.write(`
+                                <tr>
+                                    <td>${month}</td>
+                                    <td><input type="number" id="euros_${index}" class="euroInput" oninput="calculateCost(${index})" placeholder="€" style="width: 90%;"></td>
+                                    <td><input type="number" id="kwh_${index}" class="kwhInput" oninput="calculateCost(${index})" placeholder="kWh" style="width: 90%;"></td>
+                                    <td id="costPerKwh_${index}">-</td>
+                                </tr>
+                            `);
+                        });
+                    </script>
+                    <!-- Ligne pour les totaux -->
+                    <tr>
+                        <td><strong>Total annuel</strong></td>
+                        <td id="totalEuros">-</td>
+                        <td id="totalKwh">-</td>
+                        <td id="totalCostPerKwh">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            <script>
+                // Fonction pour calculer le coût par kWh pour un mois donné
+                function calculateCost(index) {
+                    const eurosInput = document.getElementById(`euros_${index}`);
+                    const kwhInput = document.getElementById(`kwh_${index}`);
+                    const costPerKwhCell = document.getElementById(`costPerKwh_${index}`);
+
+                    const euros = parseFloat(eurosInput.value) || 0;
+                    const kwh = parseFloat(kwhInput.value) || 0;
+
+                    // Calculer le coût par kWh
+                    if (kwh > 0) {
+                        const costPerKwh = (euros / kwh).toFixed(2); // Résultat arrondi à 2 décimales
+                        costPerKwhCell.textContent = `${costPerKwh} €`;
+                    } else {
+                        costPerKwhCell.textContent = "-";
+                    }
+
+                    calculateTotals(); // Met à jour les totaux
+                }
+
+                // Fonction pour calculer les totaux annuels
+                function calculateTotals() {
+                    let totalEuros = 0;
+                    let totalKwh = 0;
+
+                    // Parcourir toutes les lignes des mois
+                    for (let i = 0; i < 12; i++) {
+                        const euros = parseFloat(document.getElementById(`euros_${i}`).value) || 0;
+                        const kwh = parseFloat(document.getElementById(`kwh_${i}`).value) || 0;
+
+                        totalEuros += euros;
+                        totalKwh += kwh;
+                    }
+
+                    // Calculer le coût moyen par kWh
+                    const averageCostPerKwh = totalKwh > 0 ? (totalEuros / totalKwh).toFixed(2) : "-";
+
+                    // Mettre à jour les cellules des totaux
+                    document.getElementById("totalEuros").textContent = `${totalEuros.toFixed(2)} €`;
+                    document.getElementById("totalKwh").textContent = `${totalKwh.toFixed(2)} kWh`;
+                    document.getElementById("totalCostPerKwh").textContent = 
+                        totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
+                }
+            </script>
+        </div>
+
+        <!-- 4) Déplacement du bloc Commentaires tout en bas -->
         <div class="form-section">
             <h3>Commentaires</h3>
             <label for="comments">Commentaires :</label>
@@ -165,94 +254,8 @@
         </div>
     </form>
 
+    <!-- Bouton d'export PDF déplacé également en bas de la page -->
     <button onclick="saveMapAsPDF()">Exporter en PDF</button>
-
-    <!-- Intégration DU TABLEAU DES CONSOMMATIONS Mensuelles (page 2 du PDF) -->
-    <div id="consumptionTableContainer" style="margin-top: 40px;">
-        <h3>Consommation mensuelle</h3>
-        <table id="consumptionTable" border="1" style="border-collapse: collapse; width: 100%; text-align: center;">
-            <thead>
-                <tr>
-                    <th style="width: 20%;">Mois</th>
-                    <th style="width: 25%;">Consommation (€)</th>
-                    <th style="width: 25%;">Consommation (kWh)</th>
-                    <th style="width: 30%;">Coût par kWh (€)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Générer les lignes pour chaque mois -->
-                <script>
-                    const months = [
-                        "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-                        "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
-                    ];
-
-                    months.forEach((month, index) => {
-                        document.write(`
-                            <tr>
-                                <td>${month}</td>
-                                <td><input type="number" id="euros_${index}" class="euroInput" oninput="calculateCost(${index})" placeholder="€" style="width: 90%;"></td>
-                                <td><input type="number" id="kwh_${index}" class="kwhInput" oninput="calculateCost(${index})" placeholder="kWh" style="width: 90%;"></td>
-                                <td id="costPerKwh_${index}">-</td>
-                            </tr>
-                        `);
-                    });
-                </script>
-                <!-- Ligne pour les totaux -->
-                <tr>
-                    <td><strong>Total annuel</strong></td>
-                    <td id="totalEuros">-</td>
-                    <td id="totalKwh">-</td>
-                    <td id="totalCostPerKwh">-</td>
-                </tr>
-            </tbody>
-        </table>
-        <script>
-            // Fonction pour calculer le coût par kWh pour un mois donné
-            function calculateCost(index) {
-                const eurosInput = document.getElementById(`euros_${index}`);
-                const kwhInput = document.getElementById(`kwh_${index}`);
-                const costPerKwhCell = document.getElementById(`costPerKwh_${index}`);
-
-                const euros = parseFloat(eurosInput.value) || 0;
-                const kwh = parseFloat(kwhInput.value) || 0;
-
-                // Calculer le coût par kWh
-                if (kwh > 0) {
-                    const costPerKwh = (euros / kwh).toFixed(2); // Résultat arrondi à 2 décimales
-                    costPerKwhCell.textContent = `${costPerKwh} €`;
-                } else {
-                    costPerKwhCell.textContent = "-";
-                }
-
-                calculateTotals(); // Met à jour les totaux
-            }
-
-            // Fonction pour calculer les totaux annuels
-            function calculateTotals() {
-                let totalEuros = 0;
-                let totalKwh = 0;
-
-                // Parcourir toutes les lignes des mois
-                for (let i = 0; i < 12; i++) {
-                    const euros = parseFloat(document.getElementById(`euros_${i}`).value) || 0;
-                    const kwh = parseFloat(document.getElementById(`kwh_${i}`).value) || 0;
-
-                    totalEuros += euros;
-                    totalKwh += kwh;
-                }
-
-                // Calculer le coût moyen par kWh
-                const averageCostPerKwh = totalKwh > 0 ? (totalEuros / totalKwh).toFixed(2) : "-";
-
-                // Mettre à jour les cellules des totaux
-                document.getElementById("totalEuros").textContent = `${totalEuros.toFixed(2)} €`;
-                document.getElementById("totalKwh").textContent = `${totalKwh.toFixed(2)} kWh`;
-                document.getElementById("totalCostPerKwh").textContent = totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
-            }
-        </script>
-    </div>
-    <!-- FIN Intégration DU TABLEAU DES CONSOMMATIONS -->
 
     <script>
         // Initialiser la carte
@@ -381,7 +384,6 @@
                     const tableImage = tableCanvas.toDataURL('image/png');
 
                     // On insère le tableau sur la seconde page
-                    //  (Largeur 190mm, on ajuste la position sur la page)
                     pdf.addImage(tableImage, 'PNG', 10, 20, 190, 0);
 
                     // 4) Finalement, on sauvegarde le PDF
