@@ -67,7 +67,7 @@
     </style>
 </head>
 <body>
-    <h1>Carte avec Dessin, Formulaire et Consommation</h1>
+    <h1> Formulaire et Consommation</h1>
     <form id="addressForm" onsubmit="return searchAddress(event);">
         <label for="address">Adresse :</label>
         <input type="text" id="address" name="address" placeholder="Entrez une adresse" required>
@@ -347,6 +347,21 @@
                         yOffset += 10;
                     }
                 });
+
+                // Ajouter le tableau de la consommation au PDF
+const consumptionTable = document.getElementById("consumptionTable");
+pdf.text("Consommation Mensuelle :", 10, yOffset); // Titre
+yOffset += 10;
+
+// Parcourir les lignes du tableau
+Array.from(consumptionTable.rows).forEach((row, rowIndex) => {
+    let rowText = "";
+    Array.from(row.cells).forEach((cell) => {
+        rowText += cell.innerText + " | "; // Concaténer les cellules
+    });
+    pdf.text(rowText.trim(), 10, yOffset);
+    yOffset += 10; // Espacement entre les lignes
+});
 
                 const companyName = document.getElementById('companyName').value;
                 const pdfFileName = companyName ? `Formulaire_${companyName}.pdf` : 'Formulaire.pdf';
