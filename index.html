@@ -14,6 +14,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- Script de localisation français pour Flatpickr -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
 
   <style>
     /* ------------------------------
@@ -829,9 +831,10 @@
       }
     });
 
-    // Initialisation de Flatpickr pour le champ RDV Date
+    // Initialisation de Flatpickr pour le champ RDV Date avec format français
     flatpickr("#rdvDate", {
-      dateFormat: "Y-m-d"
+      locale: "fr",
+      dateFormat: "d/m/Y"
     });
   </script>
 </body>
