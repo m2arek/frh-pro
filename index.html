@@ -6,10 +6,14 @@
   <title>FRH PRO formulaire</title>
   <!-- Liens CSS pour Leaflet -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
-  <!-- Scripts JS pour Leaflet et html2canvas -->
+  <!-- Liens CSS pour Flatpickr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  
+  <!-- Scripts JS pour Leaflet, html2canvas, jsPDF et Flatpickr -->
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
   <style>
     /* ------------------------------
@@ -305,8 +309,6 @@
           <option value="Locataire">Locataire</option>
         </select>
 
-        
-
          <label for="Annees presence">Annees presence :</label>
         <input
           type="text"
@@ -314,7 +316,6 @@
           name="Annees presence"
           placeholder="Entrez le nombre d'Annees de presence"
         />
-        
       </div>
 
       <!-- 2) Informations toiture -->
@@ -333,10 +334,8 @@
           <option value="" disabled selected>indiquer si la toiture est partagee</option>
           <option value="Oui">Oui</option>
           <option value="Non">Non</option>
-          </select>
+        </select>
 
-
-        
         <label for="Type de toiture">Type de toiture :</label>
         <select id="Type de toiture" name="Type de toiture">
           <option value="" disabled selected>Choisissez un Type de toiture</option>
@@ -387,8 +386,6 @@
       <!-- 3) Periodes d'utilisation -->
       <div class="form-section">
         <h3>Periodes d'utilisation</h3>
-
-        
 
         <!-- Mois de congés (cases à cocher) -->
         <h4>Mois de congés</h4>
@@ -463,7 +460,8 @@
                             class="euroInput"
                             oninput="calculateCost(${index})"
                             placeholder="€"
-                            style="width: 90%;">
+                            style="width: 90%;"
+                        >
                     </td>
                     <td>
                         <input
@@ -473,7 +471,8 @@
                             class="kwhInput"
                             oninput="calculateCost(${index})"
                             placeholder="kWh"
-                            style="width: 90%;">
+                            style="width: 90%;"
+                        >
                     </td>
                     <td id="costPerKwh_${index}">-</td>
                   </tr>
@@ -529,6 +528,17 @@
               totalKwh > 0 ? `${averageCostPerKwh} €` : "-";
           }
         </script>
+      </div>
+
+      <!-- Bloc RDV avec calendrier Flatpickr -->
+      <div class="form-section">
+        <h3>RDV</h3>
+        <label for="rdvDate">Date du RDV :</label>
+        <!-- Champ de type text pour activer le calendrier Flatpickr -->
+        <input type="text" id="rdvDate" name="rdvDate" placeholder="Choisissez une date" />
+
+        <label for="rdvTime">Heure du RDV :</label>
+        <input type="time" id="rdvTime" name="rdvTime" />
       </div>
 
       <!-- 5) Commentaires -->
@@ -817,6 +827,11 @@
         };
         reader.readAsText(file);
       }
+    });
+
+    // Initialisation de Flatpickr pour le champ RDV Date
+    flatpickr("#rdvDate", {
+      dateFormat: "Y-m-d"
     });
   </script>
 </body>
